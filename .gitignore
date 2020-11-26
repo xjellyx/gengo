@@ -1,0 +1,11 @@
+#  idea
+.idea
+*.exe
+*.pem
+*.mp3
+*.key
+*.log
+*.xlsx
+*.jpg
+*.yml
+*.png
