@@ -3,7 +3,7 @@ package model
 import "fmt"
 
 var (
-	GORMTemplate = fmt.Sprintf(`package {{.Package}}
+	GORMTemplate = fmt.Sprintf(`package model_{{.Package}}
 {{$TFErr :=.TFErr}}
 import (
 {{- if $TFErr}} "errors" {{end}}
@@ -86,7 +86,7 @@ func New{{.StructName}}()*{{.StructName}}{
 		}
 	
 	// Get{{$StructName}}List get {{$StructName}} list some field value or some condition
-	func Get{{$StructName}}List(q *Query{{$StructName}}Form, db *gorm.DB)(ret []*{{$StructName}},err error){
+	func Get{{$StructName}}List(db *gorm.DB, q *Query{{$StructName}}Form)(ret []*{{$StructName}},err error){
 		// order
 		if len(q.Order)>0{
 			for _,v:=range q.Order {

@@ -29,13 +29,19 @@ type Edit{{$StructName}}ReqForm struct {
 	ID int64 %sjson:"id" form:"id" binding:"required"%s
 	{{range .Fields -}}
 	  {{if not .IsBaseModel -}}
-		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // if required, add binding:"required" to tag by self
+		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s
 	  {{end -}}
 	{{- end -}}
 }
 
 func (a *Edit{{$StructName}}ReqForm) Valid() (err error) {
 	return
+}
+
+func (a *Edit{{$StructName}}ReqForm)ToMAP()(ret map[string]interface{}){
+	ret= make(map[string]interface{},0)
+	{{range .Fields}}{{if not .IsBaseModel}} ret["{{.DBName}}"] = a.{{.FieldName}};{{end}}{{end}}
+	return 
 }
 
 // Add{{$StructName}} add
@@ -53,6 +59,7 @@ func Add{{$StructName}}(req *Add{{$StructName}}ReqForm)(ret *model_{{$Package}}.
 		return
 	}
 
+	// 
 	ret = data
 	return
 }
@@ -63,19 +70,28 @@ func Edit{{$StructName}}(id int,req *Edit{{$StructName}}ReqForm)(ret *model_{{$P
 		return
 	}
 	var(
-		body []byte
-		data =new(model_{{$Package}}.{{$StructName}})
-		m = make(map[string]interface{},0)
+		data =model_{{$Package}}.New{{$StructName}}()
 	)
-	data.ID = uint(req.ID)
 	// todo add you business logic
-	{{- range .Fields -}}
-	  {{if not .IsBaseModel -}}
-		m["{{.DBName}}"] = req.{{.FieldName}}
-	  {{end -}}
-	{{- end -}}
-	if err = data.Updates(model_common.DB,m);err!=nil{return}
+	
+	if err = data.SetQueryByID(uint(req.ID)).Updates(model_common.DB,req.ToMAP());err!=nil{return}
+	
+	// 
 	ret = data
+	return
+}
+
+// Get{{$StructName}}Page get page {{$StructName}} data
+func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(ret []*model_{{$Package}}.{{$StructName}}, err error) {
+	var(
+		datas []*model_{{$Package}}.{{$StructName}}
+	)
+	// todo add you business logic
+	
+	if datas,err = model_{{$Package}}.Get{{$StructName}}List(model_common.DB,req);err!=nil{return}
+	
+	// 
+	ret = datas
 	return
 }
 
