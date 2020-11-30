@@ -17,19 +17,19 @@ import (
 )
 
 // Error
- {{if $TFErr}} var(
-		 ErrCreate{{.StructName}} = errors.New("create {{.StructName}} failed")
-		 ErrDelete{{.StructName}} = errors.New("delete {{.StructName}} failed")
-		 ErrGet{{.StructName}} = errors.New("get {{.StructName}} failed")
-		 ErrUpdate{{.StructName}} = errors.New("update {{.StructName}} failed")
-	)
+{{if $TFErr}} var(
+	ErrCreate{{.StructName}} = errors.New("create {{.StructName}} failed")
+	ErrDelete{{.StructName}} = errors.New("delete {{.StructName}} failed")
+	ErrGet{{.StructName}} = errors.New("get {{.StructName}} failed")
+	ErrUpdate{{.StructName}} = errors.New("update {{.StructName}} failed")
+)
 {{end}}
-	// {{.StructName}} 
-	type {{.StructName}} {{.StructDetail}}
-	// New{{.StructName}} new
-	func New{{.StructName}}()*{{.StructName}}{
-		return new({{.StructName}})
-	}
+// {{.StructName}} 
+type {{.StructName}} {{.StructDetail}}
+// New{{.StructName}} new
+func New{{.StructName}}()*{{.StructName}}{
+	return new({{.StructName}})
+}
 	// Add add one record
 	func (t *{{.StructName}}) Add(db *gorm.DB)(err error) {
 		if err = db.Create(t).Error;err!=nil{
@@ -78,7 +78,7 @@ import (
 	{{$StructName := .StructName}}
 	//  Query{{$StructName}}Form query form
 	type Query{{$StructName}}Form struct{
-	{{- range .Fields}}{{- if not .IsUnique}}		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s{{- end}}
+	{{- range .Fields}}{{- if not .IsUnique}}		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self{{- end}}
 {{end}}
 		Order []string %sjson:"order" form:"order"%s
 		PageNum int %sjson:"pageNum" form:"pageNum" binding:"required"%s

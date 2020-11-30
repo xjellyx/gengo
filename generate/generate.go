@@ -24,6 +24,8 @@ const (
 	devName     = "dev"
 	testName    = "test"
 	prodName    = "prod"
+	initDB      = "initDB"
+	common      = "common"
 )
 
 type Struct struct {
@@ -90,10 +92,10 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 		g.modelBuf[v.StructName] = new(bytes.Buffer)
 		g.serviceBuf[v.StructName] = new(bytes.Buffer)
 	}
-	g.modelBuf["common"] = &bytes.Buffer{}
-	g.modelBuf["initDB"] = &bytes.Buffer{}
+	g.modelBuf[common] = &bytes.Buffer{}
+	g.modelBuf[initDB] = &bytes.Buffer{}
 
-	g.serviceBuf["common"] = &bytes.Buffer{}
+	g.serviceBuf[common] = &bytes.Buffer{}
 
 	return g, nil
 }
@@ -112,21 +114,21 @@ func (g *Generator) genModel() (err error) {
 		temp *template.Template
 	)
 	// 生成model公共代码
-	if temp, err = template.New("common").Parse(model.CommonTemplate); err != nil {
+	if temp, err = template.New(common).Parse(model.CommonTemplate); err != nil {
 		return
 	}
 	c := parse.Config{}
 	c = g.config
 	c.Package = "model_common"
-	if err = temp.Execute(g.modelBuf["common"], c); err != nil {
+	if err = temp.Execute(g.modelBuf[common], c); err != nil {
 		return
 	}
 
 	// 生成初始化数据库代码
-	if temp, err = template.New("initDB").Parse(model.GORMInitDB); err != nil {
+	if temp, err = template.New(initDB).Parse(model.GORMInitDB); err != nil {
 		return
 	}
-	if err = temp.Execute(g.modelBuf["initDB"], g.initDB); err != nil {
+	if err = temp.Execute(g.modelBuf[initDB], g.initDB); err != nil {
 		return
 	}
 	for _, v := range g.parser.Structs {
@@ -202,13 +204,13 @@ func (g *Generator) genService() (err error) {
 		temp *template.Template
 	)
 	// 生成model公共代码
-	if temp, err = template.New("common").Parse(service.CommonTemplate); err != nil {
+	if temp, err = template.New(common).Parse(service.CommonTemplate); err != nil {
 		return
 	}
 	c := parse.Config{}
 	c = g.config
 	c.Package = "srv_common"
-	if err = temp.Execute(g.serviceBuf["common"], c); err != nil {
+	if err = temp.Execute(g.serviceBuf[common], c); err != nil {
 		return
 	}
 
@@ -254,8 +256,7 @@ func (g *Generator) formatModel() {
 	for k, _ := range g.modelBuf {
 		formatedOutput, err := format.Source(g.modelBuf[k].Bytes())
 		if err != nil {
-			log.Warnln(string(g.modelBuf[k].Bytes()))
-			panic(err)
+			log.Fatalln(err)
 		}
 		g.modelBuf[k] = bytes.NewBuffer(formatedOutput)
 	}
@@ -281,9 +282,22 @@ func (g *Generator) formatService() {
 
 // Format function formates the output of the generation.
 func (g *Generator) Format() *Generator {
-	g.formatSetting()
-	g.formatModel()
-	g.formatService()
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		g.formatSetting()
+	}()
+	go func() {
+		defer wg.Done()
+		g.formatModel()
+	}()
+	go func() {
+		defer wg.Done()
+		g.formatService()
+	}()
+
+	wg.Wait()
 	return g
 }
 
