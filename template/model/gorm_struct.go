@@ -75,6 +75,26 @@ func New{{.StructName}}()*{{.StructName}}{
 		db.Model(&{{.StructName}}{}).Count(&ret)
 		return
 	}
+
+	// Delete{{.StructName}}Batch delete {{.StructName}} batch
+	func Delete{{.StructName}}Batch(db *gorm.DB, ids []int)(err error){
+		if err = db.Model(&{{.StructName}}{}).Where("id in ?",ids).Delete().Error;err!=nil{
+			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
+			err = ErrDelete{{.StructName}} {{end}}
+			return
+		}
+		return 
+	}
+	
+	// Add{{.StructName}}Batch add {{.StructName}} batch
+	func Add{{.StructName}}Batch(db *gorm.DB, datas []*{{.StructName}})(err error){
+		if err =  db.Model(&{{.StructName}}{}).Create(datas).Error;err!=nil{
+			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
+			err = ErrCreate{{.StructName}} {{end}}
+			return
+		}
+	}
+
 	{{$StructName := .StructName}}
 	//  Query{{$StructName}}Form query form
 	type Query{{$StructName}}Form struct{
@@ -115,16 +135,6 @@ func New{{.StructName}}()*{{.StructName}}{
 		return
 	}
 
-	// Add{{$StructName}}ReqForm
-	type Add{{$StructName}}ReqForm struct {
-		{{- range .Fields}}{{- if not .IsBaseModel}}		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s{{- end}}
-		{{end}}}
-
-	// Edit{{$StructName}}ReqForm
-	type Edit{{$StructName}}ReqForm struct {
-		{{- range .Fields}}{{- if not .IsBaseModel}}		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s{{- end}}
-		{{end}}}
-
 	{{- range .Fields}}
 		{{- if .IsUnique}}
 			// QueryBy{{.FieldName}} query cond by {{.FieldName}}
@@ -154,7 +164,7 @@ func New{{.StructName}}()*{{.StructName}}{
 		}
 		{{- end}}
 	{{end}}
-`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
+`, "`", "`", "`", "`", "`", "`", "`", "`")
 	GORMInitDB = `
 package model
 {{$Mod :=.Mod}}
