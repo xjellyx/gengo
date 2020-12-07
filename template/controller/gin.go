@@ -184,7 +184,7 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 // @Description delete {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param id param string true "{{$StructName}} ID"
+// @Param id body string true "{{$StructName}} ID"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Package}}/delete [delete]
@@ -202,7 +202,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	id = c.Param("id")
+	id = c.PostForm("id")
 	if err = srv_{{$Package}}.Delete{{$StructName}}One(id);err!=nil{return}
 }
 
@@ -212,7 +212,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 // @Description delete {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param ids param [int] true "{{$StructName}} ID list"
+// @Param ids body [int] true "{{$StructName}} ID list"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Package}}/deleteList [delete]
