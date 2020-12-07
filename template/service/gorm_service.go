@@ -6,6 +6,7 @@ var (
 	GORMServiceTemplate = fmt.Sprintf(`package srv_{{.Package}}
 {{- $Package := .Package }}
 import(
+	"strconv"
 	"{{.Mod}}/model/{{$Package}}"
 	"{{.Mod}}/model/common"
 	"github.com/mitchellh/mapstructure"
@@ -86,7 +87,7 @@ func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Pack
 }
 
 // Edit{{$StructName}}One edit
-func Edit{{$StructName}}One(id int,req *Edit{{$StructName}}ReqForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -117,16 +118,22 @@ func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(re
 }
 
 // Get{{$StructName}}One get {{$StructName}} 
-func Get{{$StructName}}One(id int)( err error) {
+func Get{{$StructName}}One(in string)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	var(
+		id,_ = strconv.Atoi(in)
 		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID(uint(id))
 	)
-	return   d.GetByID(model_common.DB)
+	if err = d.GetByID(model_common.DB);err!=nil{return}
+
+	ret = d
+	return   
 }
 
 // Delete{{$StructName}}One delete {{$StructName}} 
-func Delete{{$StructName}}One(id int)( err error) {
+func Delete{{$StructName}}One(in string)( err error) {
+
 	var(
+	id,_ = strconv.Atoi(in)
 		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID(uint(id))
 	)
 	// if needed todo add you business logic code
@@ -134,7 +141,7 @@ func Delete{{$StructName}}One(id int)( err error) {
 }
 
 // Delete{{$StructName}}Batch delete {{$StructName}} 
-func Delete{{$StructName}}Batch(ids []int)( err error) {
+func Delete{{$StructName}}Batch(ids []string)( err error) {
 	// if needed todo add you business logic code
 	return   model_{{$Package}}.Delete{{$StructName}}Batch(model_common.DB,ids)
 }

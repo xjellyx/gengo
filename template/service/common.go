@@ -4,9 +4,10 @@ import "fmt"
 
 var (
 	CommonTemplate = fmt.Sprintf(`package {{.Package}}
-
+{{$Mod :=.Mod}}
 import(
 "github.com/olongfen/contrib/log"
+"{{$Mod}}/setting"
 "gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ type FieldData struct {
 
 
 var(
-	ModelLog = log.NewLogFile(log.ParamLog{Path:   "./log/model",Stdout: true})
+	ServiceLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "service", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
 	DB *gorm.DB
 )
 `, "`", "`", "`", "`")

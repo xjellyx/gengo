@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"strings"
 
@@ -10,10 +9,8 @@ import (
 	"github.com/olongfen/gengo/parse"
 )
 
-
-
 var (
-	tfErr   bool
+	tfErr bool
 	input,
 	output,
 	mod,
@@ -22,7 +19,6 @@ var (
 
 func parseFlags() {
 
-
 	flag.StringVar(&output, "output", "", "[Required] The name of schema output to generate output for, comma seperated")
 	flag.StringVar(&input, "input", "", "[Required] The name of the input file path")
 	flag.StringVar(&mod, "mod", "", "[Required] The name of project go module")
@@ -30,11 +26,10 @@ func parseFlags() {
 	flag.BoolVar(&tfErr, "tfErr", false, "[Option] The name of transform db err")
 	flag.Parse()
 
-	if input == "" || len(mod)==0 || len(output)==0 {
+	if input == "" || len(mod) == 0 || len(output) == 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
-
 
 }
 
@@ -45,21 +40,19 @@ func main() {
 		gen *generate.Generator
 	)
 
-	if gen,err = generate.NewGenerator(output,parse.NewParser(input),parse.Config{
-		Imports: func()(ret []string) {
+	if gen, err = generate.NewGenerator(output, parse.NewParser(input), parse.Config{
+		Imports: func() (ret []string) {
 			s := strings.Split(imports, ",")
 			for _, v := range s {
-				ret = append(ret,v)
+				ret = append(ret, v)
 			}
 			return ret
 		}(),
-		Mod: mod,
+		Mod:   mod,
 		TFErr: tfErr,
-	});err!=nil{
+	}); err != nil {
 		panic(err)
 	}
-	if err = gen.Generate().Format().Flush(); err != nil {
-		log.Fatalln(err)
-	}
+	gen.Generate().Format().Flush()
 
 }

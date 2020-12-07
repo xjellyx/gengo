@@ -2,7 +2,7 @@ package model
 
 import "fmt"
 
-var(
+var (
 	CommonTemplate = fmt.Sprintf(`package {{.Package}}
 
 import(
@@ -17,8 +17,8 @@ type FieldData struct {
 
 
 var(
-	ModelLog = log.NewLogFile(log.ParamLog{Path:   "./log/model",Stdout: true})
+	ModelLog *log.Logger
 	DB *gorm.DB
 )
-`,"`","`" ,"`","`")
+`, "`", "`", "`", "`")
 )

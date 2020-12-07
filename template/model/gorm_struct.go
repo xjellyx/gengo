@@ -77,7 +77,7 @@ func New{{.StructName}}()*{{.StructName}}{
 	}
 
 	// Delete{{.StructName}}Batch delete {{.StructName}} batch
-	func Delete{{.StructName}}Batch(db *gorm.DB, ids []int)(err error){
+	func Delete{{.StructName}}Batch(db *gorm.DB, ids []string)(err error){
 		if err = db.Model(&{{.StructName}}{}).Where("id in ?",ids).Delete().Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 			err = ErrDelete{{.StructName}} {{end}}

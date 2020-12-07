@@ -3,6 +3,8 @@ package generate
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"github.com/olongfen/gengo/template/controller"
 	"github.com/olongfen/gengo/template/service"
 	"github.com/olongfen/gengo/template/setting"
 	"github.com/olongfen/gengo/utils"
@@ -26,6 +28,8 @@ const (
 	prodName    = "prod"
 	initDB      = "initDB"
 	common      = "common"
+	response    = "response"
+	initRouter  = "initRouter"
 )
 
 type Struct struct {
@@ -43,6 +47,8 @@ type Generator struct {
 	modelBuf   map[string]*bytes.Buffer
 	serviceBuf map[string]*bytes.Buffer
 	settingBuf map[string]*bytes.Buffer
+	controlBuf map[string]*bytes.Buffer
+	routerBuf  map[string]*bytes.Buffer
 	outputDir  string
 	config     parse.Config
 	parser     *parse.Parser
@@ -53,12 +59,22 @@ func (g *Generator) init() {
 	if len(g.config.ORM) == 0 {
 		g.config.ORM = "gorm"
 	}
+	if len(g.config.WEB) == 0 {
+		g.config.WEB = "gin"
+	}
 	// init setting
 	g.settingBuf[settingName] = &bytes.Buffer{}
 	g.settingBuf[devName] = &bytes.Buffer{}
 	g.settingBuf[testName] = &bytes.Buffer{}
 	g.settingBuf[prodName] = &bytes.Buffer{}
 	g.settingBuf[envName] = &bytes.Buffer{}
+	//
+	g.modelBuf[common] = &bytes.Buffer{}
+	g.modelBuf[initDB] = &bytes.Buffer{}
+	g.serviceBuf[common] = &bytes.Buffer{}
+	g.controlBuf[common] = &bytes.Buffer{}
+	g.controlBuf[response] = &bytes.Buffer{}
+	g.routerBuf[initRouter] = &bytes.Buffer{}
 }
 
 // NewGenerator function creates an instance of the generator given the name of the output file as an argument.
@@ -75,6 +91,8 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 		modelBuf:   map[string]*bytes.Buffer{},
 		serviceBuf: map[string]*bytes.Buffer{},
 		settingBuf: map[string]*bytes.Buffer{},
+		controlBuf: map[string]*bytes.Buffer{},
+		routerBuf:  map[string]*bytes.Buffer{},
 		outputDir:  output,
 		parser:     p,
 		initDB:     new(InitDB),
@@ -91,11 +109,9 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 		v.Config.Package = strings.ToLower(v.StructName)
 		g.modelBuf[v.StructName] = new(bytes.Buffer)
 		g.serviceBuf[v.StructName] = new(bytes.Buffer)
+		g.controlBuf[v.StructName] = new(bytes.Buffer)
+		g.routerBuf[v.StructName] = new(bytes.Buffer)
 	}
-	g.modelBuf[common] = &bytes.Buffer{}
-	g.modelBuf[initDB] = &bytes.Buffer{}
-
-	g.serviceBuf[common] = &bytes.Buffer{}
 
 	return g, nil
 }
@@ -144,8 +160,10 @@ func (g *Generator) genModel() (err error) {
 				return
 			}
 			if err = t.Execute(g.modelBuf[v.StructName], v); err != nil {
-				log.Fatalln(err)
+				return
 			}
+		default:
+			return fmt.Errorf("this type is not currently supported >>>> %s", g.config.ORM)
 		}
 	}
 	return
@@ -198,7 +216,7 @@ func (g *Generator) genSetting() (err error) {
 	return
 }
 
-// genSetting
+// genService
 func (g *Generator) genService() (err error) {
 	var (
 		temp *template.Template
@@ -228,8 +246,55 @@ func (g *Generator) genService() (err error) {
 				return
 			}
 			if err = t.Execute(g.serviceBuf[v.StructName], v); err != nil {
+				return
+			}
+		default:
+			return fmt.Errorf("this type is not currently supported >>>> %s", g.config.ORM)
+		}
+	}
+	return
+}
+
+// genControl
+func (g *Generator) genControl() (err error) {
+	var (
+		temp *template.Template
+	)
+	if temp, err = template.New(common).Parse(controller.CommonTemplate); err != nil {
+		return
+	}
+	c := parse.Config{}
+	c = g.config
+	c.Package = "ctrl_common"
+	if err = temp.Execute(g.controlBuf[common], c); err != nil {
+		return
+	}
+
+	if temp, err = template.New(common).Parse(controller.ResponseTemplate); err != nil {
+		return
+	}
+	if err = temp.Execute(g.controlBuf[response], nil); err != nil {
+		return
+	}
+
+	for _, v := range g.parser.Structs {
+		var (
+			t *template.Template
+		)
+		if _, ok := g.controlBuf[v.StructName]; !ok {
+			continue
+		}
+
+		switch g.config.WEB {
+		case "gin":
+			if t, err = template.New(v.StructName).Parse(controller.GinTemplate); err != nil {
+				return
+			}
+			if err = t.Execute(g.controlBuf[v.StructName], v); err != nil {
 				log.Fatalln(err)
 			}
+		default:
+			return fmt.Errorf("this type is not currently supported >>>> %s", g.config.WEB)
 		}
 	}
 	return
@@ -249,9 +314,13 @@ func (g *Generator) Generate() *Generator {
 	if err := g.genService(); err != nil {
 		log.Fatalln(err)
 	}
+	if err := g.genControl(); err != nil {
+		log.Fatalln(err)
+	}
 	return g
 }
 
+// formatModel
 func (g *Generator) formatModel() {
 	for k, _ := range g.modelBuf {
 		formatedOutput, err := format.Source(g.modelBuf[k].Bytes())
@@ -262,14 +331,16 @@ func (g *Generator) formatModel() {
 	}
 }
 
+// formatSetting
 func (g *Generator) formatSetting() {
 	formatedOutput, err := format.Source(g.settingBuf[settingName].Bytes())
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	g.settingBuf[settingName] = bytes.NewBuffer(formatedOutput)
 }
 
+// formatService
 func (g *Generator) formatService() {
 	for k, _ := range g.serviceBuf {
 		formatedOutput, err := format.Source(g.serviceBuf[k].Bytes())
@@ -280,10 +351,21 @@ func (g *Generator) formatService() {
 	}
 }
 
+// formatController
+func (g *Generator) formatController() {
+	for k, _ := range g.controlBuf {
+		formatedOutput, err := format.Source(g.controlBuf[k].Bytes())
+		if err != nil {
+			log.Fatalln(err)
+		}
+		g.controlBuf[k] = bytes.NewBuffer(formatedOutput)
+	}
+}
+
 // Format function formates the output of the generation.
 func (g *Generator) Format() *Generator {
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		g.formatSetting()
@@ -297,108 +379,176 @@ func (g *Generator) Format() *Generator {
 		g.formatService()
 	}()
 
+	go func() {
+		defer wg.Done()
+		g.formatController()
+	}()
 	wg.Wait()
 	return g
 }
 
+// flushModel
+func (g *Generator) flushModel() (err error) {
+	for k, _ := range g.modelBuf {
+		s := strings.ToLower(k)
+		dir := g.outputDir + "/model/" + s
+		if err = os.MkdirAll(dir, 0777); err != nil {
+			if !os.IsExist(err) {
+				return
+			}
+		}
+		filename := dir + "/gen_" + s + ".go"
+		if utils.Exists(filename) {
+			continue
+		}
+
+		if err = ioutil.WriteFile(filename, g.modelBuf[k].Bytes(), 0777); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (g *Generator) flushService() (err error) {
+	for k, _ := range g.serviceBuf {
+		s := strings.ToLower(k)
+		dir := g.outputDir + "/service/" + s
+		if err = os.MkdirAll(dir, 0777); err != nil {
+			if !os.IsExist(err) {
+				return
+			}
+		}
+		filename := dir + "/gen_" + s + ".go"
+		if utils.Exists(filename) {
+			continue
+		}
+
+		if err = ioutil.WriteFile(filename, g.serviceBuf[k].Bytes(), 0777); err != nil {
+			return
+		}
+	}
+	return
+}
+
+// flushSetting
+func (g *Generator) flushSetting() (err error) {
+	for k, _ := range g.settingBuf {
+		switch k {
+		case settingName:
+			dir := g.outputDir + "/setting"
+			filename := dir + "/gen_setting.go"
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			if utils.Exists(filename) {
+				continue
+			}
+			if err = ioutil.WriteFile(filename, g.settingBuf[k].Bytes(), 0777); err != nil {
+				return
+			}
+		case envName:
+			dir := g.outputDir + "/conf"
+			filename := dir + "/.env"
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			if utils.Exists(filename) {
+				continue
+			}
+			if err = ioutil.WriteFile(filename, g.settingBuf[k].Bytes(), 0777); err != nil {
+				return
+			}
+		case devName, testName, prodName:
+			dir := g.outputDir + "/conf/"
+			filename := dir + k + "-global-config" + ".yaml"
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+
+			if utils.Exists(filename) {
+				continue
+			}
+			if err = ioutil.WriteFile(filename, g.settingBuf[k].Bytes(), 0777); err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+// flushController
+func (g *Generator) flushController() (err error) {
+	for k, _ := range g.controlBuf {
+		s := strings.ToLower(k)
+		var (
+			dir string
+		)
+		switch k {
+		case common, response:
+			dir = g.outputDir + "/controller/" + s
+		default:
+			dir = g.outputDir + "/controller/api/" + s
+		}
+
+		if err = os.MkdirAll(dir, 0777); err != nil {
+			if !os.IsExist(err) {
+				return
+			}
+		}
+		filename := dir + "/gen_" + s + ".go"
+		if utils.Exists(filename) {
+			continue
+		}
+
+		if err = ioutil.WriteFile(filename, g.controlBuf[k].Bytes(), 0777); err != nil {
+			return
+		}
+	}
+	return
+}
+
 // Flush function writes the output to the output file.
-func (g *Generator) Flush() (err error) {
-	wg := sync.WaitGroup{}
+func (g *Generator) Flush() {
+	var (
+		err error
+		wg  = sync.WaitGroup{}
+	)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for k, _ := range g.modelBuf {
-			s := strings.ToLower(k)
-			dir := g.outputDir + "/model/" + s
-			if err = os.MkdirAll(dir, 0777); err != nil {
-				if !os.IsExist(err) {
-					log.Fatalln(err)
-				}
-			}
-			filename := dir + "/gen_" + s + ".go"
-			if utils.Exists(filename) {
-				continue
-			}
-
-			if err = ioutil.WriteFile(filename, g.modelBuf[k].Bytes(), 0777); err != nil {
-				log.Fatalln(err)
-			}
+		if err = g.flushModel(); err != nil {
+			log.Fatalln(err)
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for k, _ := range g.settingBuf {
-			switch k {
-			case settingName:
-				dir := g.outputDir + "/setting"
-				filename := dir + "/gen_setting.go"
-				if err = os.MkdirAll(dir, 0777); err != nil {
-					if !os.IsExist(err) {
-						log.Fatalln(err)
-					}
-				}
-				if utils.Exists(filename) {
-					continue
-				}
-				if err = ioutil.WriteFile(filename, g.settingBuf[k].Bytes(), 0777); err != nil {
-					log.Fatalln(err)
-				}
-			case envName:
-				dir := g.outputDir + "/conf"
-				filename := dir + "/.env"
-				if err = os.MkdirAll(dir, 0777); err != nil {
-					if !os.IsExist(err) {
-						log.Fatalln(err)
-					}
-				}
-				if utils.Exists(filename) {
-					continue
-				}
-				if err = ioutil.WriteFile(filename, g.settingBuf[k].Bytes(), 0777); err != nil {
-					log.Fatalln(err)
-				}
-			case devName, testName, prodName:
-				dir := g.outputDir + "/conf/"
-				filename := dir + k + "-global-config" + ".yaml"
-				if err = os.MkdirAll(dir, 0777); err != nil {
-					if !os.IsExist(err) {
-						log.Fatalln(err)
-					}
-				}
-
-				if utils.Exists(filename) {
-					continue
-				}
-				if err = ioutil.WriteFile(filename, g.settingBuf[k].Bytes(), 0777); err != nil {
-					log.Fatalln(err)
-				}
-			}
+		if err = g.flushService(); err != nil {
+			log.Fatalln(err)
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for k, _ := range g.serviceBuf {
-			s := strings.ToLower(k)
-			dir := g.outputDir + "/service/" + s
-			if err = os.MkdirAll(dir, 0777); err != nil {
-				if !os.IsExist(err) {
-					log.Fatalln(err)
-				}
-			}
-			filename := dir + "/gen_" + s + ".go"
-			if utils.Exists(filename) {
-				continue
-			}
-
-			if err = ioutil.WriteFile(filename, g.serviceBuf[k].Bytes(), 0777); err != nil {
-				log.Fatalln(err)
-			}
+		if err = g.flushSetting(); err != nil {
+			log.Fatalln(err)
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err = g.flushController(); err != nil {
+			log.Fatalln(err)
 		}
 	}()
 	wg.Wait()
-	return nil
 }

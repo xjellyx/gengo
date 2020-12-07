@@ -36,6 +36,7 @@ type Config struct {
 	TFErr   bool
 	Mod     string
 	ORM     string
+	WEB     string
 }
 
 // parser
