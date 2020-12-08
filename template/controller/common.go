@@ -7,13 +7,13 @@ var (
 {{$Mod :=.Mod}}
 import(
 "github.com/olongfen/contrib/log"
-"{{$Mod}}/setting"
+"{{$Mod}}/app/setting"
 )
 
 
 
 var(
-	ControlLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "controller", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+	ControlLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "controller", Stdout: !setting.DevEnv, P: setting.Global.FilePath.LogPatent})
 )
 `)
 )

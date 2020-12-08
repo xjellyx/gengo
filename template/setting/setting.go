@@ -60,18 +60,18 @@ func init() {
 		err        error
 		configFile string
 	)
-	if err = gotenv.Load("./config/.env"); err != nil {
+	if err = gotenv.Load("./conf/.env"); err != nil {
 		log.Fatal(err)
 	}
 	env := os.Getenv("ENVIRONMENT")
 	switch {
 	case strings.Contains(env, "prod"):
-		configFile = "./config/prod-global-config.yaml"
+		configFile = "./conf/prod-global-config.yaml"
 	case strings.Contains(env, "test"):
-		configFile = "./config/test-global-config.yaml"
+		configFile = "./conf/test-global-config.yaml"
 	default: // default is dev
 		DevEnv = true
-		configFile = "./config/dev-global-config.yaml"
+		configFile = "./conf/dev-global-config.yaml"
 
 	}
 	viper.SetConfigFile(configFile)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/olongfen/gengo/template/controller"
+	gin_main "github.com/olongfen/gengo/template/main"
 	"github.com/olongfen/gengo/template/service"
 	"github.com/olongfen/gengo/template/setting"
 	"github.com/olongfen/gengo/utils"
@@ -30,6 +31,7 @@ const (
 	common      = "common"
 	response    = "response"
 	initRouter  = "initRouter"
+	middleware  = "middleware"
 )
 
 type Struct struct {
@@ -49,6 +51,7 @@ type Generator struct {
 	settingBuf map[string]*bytes.Buffer
 	controlBuf map[string]*bytes.Buffer
 	routerBuf  map[string]*bytes.Buffer
+	mainBuf    *bytes.Buffer
 	outputDir  string
 	config     parse.Config
 	parser     *parse.Parser
@@ -73,6 +76,7 @@ func (g *Generator) init() {
 	g.modelBuf[initDB] = &bytes.Buffer{}
 	g.serviceBuf[common] = &bytes.Buffer{}
 	g.controlBuf[common] = &bytes.Buffer{}
+	g.controlBuf[middleware] = &bytes.Buffer{}
 	g.controlBuf[response] = &bytes.Buffer{}
 	g.routerBuf[initRouter] = &bytes.Buffer{}
 }
@@ -93,6 +97,7 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 		settingBuf: map[string]*bytes.Buffer{},
 		controlBuf: map[string]*bytes.Buffer{},
 		routerBuf:  map[string]*bytes.Buffer{},
+		mainBuf:    &bytes.Buffer{},
 		outputDir:  output,
 		parser:     p,
 		initDB:     new(InitDB),
@@ -260,6 +265,7 @@ func (g *Generator) genControl() (err error) {
 	var (
 		temp *template.Template
 	)
+	// common
 	if temp, err = template.New(common).Parse(controller.CommonTemplate); err != nil {
 		return
 	}
@@ -269,14 +275,43 @@ func (g *Generator) genControl() (err error) {
 	if err = temp.Execute(g.controlBuf[common], c); err != nil {
 		return
 	}
+	// 初始化代码
+	switch g.config.WEB {
+	case "gin":
+		// response
+		if temp, err = template.New(response).Parse(controller.ResponseTemplate); err != nil {
+			return
+		}
+		if err = temp.Execute(g.controlBuf[response], nil); err != nil {
+			return
+		}
 
-	if temp, err = template.New(common).Parse(controller.ResponseTemplate); err != nil {
-		return
-	}
-	if err = temp.Execute(g.controlBuf[response], nil); err != nil {
-		return
+		// middleware
+		if temp, err = template.New(middleware).Parse(controller.MiddlewareTemplate); err != nil {
+			return
+		}
+		if err = temp.Execute(g.controlBuf[middleware], nil); err != nil {
+			return
+		}
+
+		// init router
+		if temp, err = template.New(initRouter).Parse(controller.InitRouterTemplate); err != nil {
+			return
+		}
+		rc := struct {
+			Structs []*parse.StructData
+			Mod     string
+		}{}
+		rc.Mod = g.config.Mod
+		rc.Structs = g.parser.Structs
+		if err = temp.Execute(g.routerBuf[initRouter], rc); err != nil {
+			return
+		}
+	default:
+		return fmt.Errorf("this type is not currently supported >>>> %s", g.config.WEB)
 	}
 
+	//
 	for _, v := range g.parser.Structs {
 		var (
 			t *template.Template
@@ -293,9 +328,41 @@ func (g *Generator) genControl() (err error) {
 			if err = t.Execute(g.controlBuf[v.StructName], v); err != nil {
 				log.Fatalln(err)
 			}
+
+			//
+			if t, err = template.New(v.StructName).Parse(controller.StructRouterTemplate); err != nil {
+				return
+			}
+			if err = t.Execute(g.routerBuf[v.StructName], v); err != nil {
+				log.Fatalln(err)
+			}
 		default:
 			return fmt.Errorf("this type is not currently supported >>>> %s", g.config.WEB)
 		}
+	}
+	return
+}
+
+// genMain
+func (g *Generator) genMain() (err error) {
+	var (
+		temp *template.Template
+	)
+	switch g.config.WEB {
+	case "gin":
+		// common
+		if temp, err = template.New(common).Parse(gin_main.GINMainTemplate); err != nil {
+			return
+		}
+		c := parse.Config{}
+		c = g.config
+		c.Package = "main"
+		if err = temp.Execute(g.mainBuf, c); err != nil {
+			return
+		}
+	default:
+		return fmt.Errorf("this type is not currently supported >>>> %s", g.config.WEB)
+
 	}
 	return
 }
@@ -315,6 +382,9 @@ func (g *Generator) Generate() *Generator {
 		log.Fatalln(err)
 	}
 	if err := g.genControl(); err != nil {
+		log.Fatalln(err)
+	}
+	if err := g.genMain(); err != nil {
 		log.Fatalln(err)
 	}
 	return g
@@ -360,6 +430,23 @@ func (g *Generator) formatController() {
 		}
 		g.controlBuf[k] = bytes.NewBuffer(formatedOutput)
 	}
+	//
+	for k, _ := range g.routerBuf {
+		formatedOutput, err := format.Source(g.routerBuf[k].Bytes())
+		if err != nil {
+			log.Fatalln(err)
+		}
+		g.routerBuf[k] = bytes.NewBuffer(formatedOutput)
+	}
+}
+
+// formatMain
+func (g *Generator) formatMain() {
+	formatedOutput, err := format.Source(g.mainBuf.Bytes())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	g.mainBuf = bytes.NewBuffer(formatedOutput)
 }
 
 // Format function formates the output of the generation.
@@ -384,6 +471,7 @@ func (g *Generator) Format() *Generator {
 		g.formatController()
 	}()
 	wg.Wait()
+	g.formatMain()
 	return g
 }
 
@@ -391,7 +479,7 @@ func (g *Generator) Format() *Generator {
 func (g *Generator) flushModel() (err error) {
 	for k, _ := range g.modelBuf {
 		s := strings.ToLower(k)
-		dir := g.outputDir + "/model/" + s
+		dir := g.outputDir + "/app/model/" + s
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
 				return
@@ -412,7 +500,7 @@ func (g *Generator) flushModel() (err error) {
 func (g *Generator) flushService() (err error) {
 	for k, _ := range g.serviceBuf {
 		s := strings.ToLower(k)
-		dir := g.outputDir + "/service/" + s
+		dir := g.outputDir + "/app/service/" + s
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
 				return
@@ -435,7 +523,7 @@ func (g *Generator) flushSetting() (err error) {
 	for k, _ := range g.settingBuf {
 		switch k {
 		case settingName:
-			dir := g.outputDir + "/setting"
+			dir := g.outputDir + "/app/setting"
 			filename := dir + "/gen_setting.go"
 			if err = os.MkdirAll(dir, 0777); err != nil {
 				if !os.IsExist(err) {
@@ -490,10 +578,10 @@ func (g *Generator) flushController() (err error) {
 			dir string
 		)
 		switch k {
-		case common, response:
-			dir = g.outputDir + "/controller/" + s
+		case common, response, middleware:
+			dir = g.outputDir + "/app/controller/" + s
 		default:
-			dir = g.outputDir + "/controller/api/" + s
+			dir = g.outputDir + "/app/controller/api/" + s
 		}
 
 		if err = os.MkdirAll(dir, 0777); err != nil {
@@ -510,6 +598,50 @@ func (g *Generator) flushController() (err error) {
 			return
 		}
 	}
+	// 生成router代码
+	for k, _ := range g.routerBuf {
+		s := strings.ToLower(k)
+		var (
+			dir string
+		)
+		dir = g.outputDir + "/app/controller/router/"
+		if err = os.MkdirAll(dir, 0777); err != nil {
+			if !os.IsExist(err) {
+				return
+			}
+		}
+		filename := dir + "/gen_" + s + ".go"
+		if utils.Exists(filename) {
+			continue
+		}
+
+		if err = ioutil.WriteFile(filename, g.routerBuf[k].Bytes(), 0777); err != nil {
+			return
+		}
+	}
+	return
+}
+
+// flushMain
+func (g *Generator) flushMain() (err error) {
+	var (
+		dir string
+	)
+	dir = g.outputDir
+	if err = os.MkdirAll(dir, 0777); err != nil {
+		if !os.IsExist(err) {
+			return
+		}
+	}
+	filename := dir + "/main" + ".go"
+	if utils.Exists(filename) {
+		return
+	}
+
+	if err = ioutil.WriteFile(filename, g.mainBuf.Bytes(), 0777); err != nil {
+		return
+	}
+
 	return
 }
 
@@ -551,4 +683,7 @@ func (g *Generator) Flush() {
 		}
 	}()
 	wg.Wait()
+	if err = g.flushMain(); err != nil {
+		log.Fatalln(err)
+	}
 }

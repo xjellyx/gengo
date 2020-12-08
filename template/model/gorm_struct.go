@@ -12,7 +12,7 @@ import (
 			"{{$val}}"
 		{{end}}
 	{{end}}
-	"{{.Mod}}/model/common"
+	"{{.Mod}}/app/model/common"
 	"gorm.io/gorm"
 )
 
@@ -52,7 +52,7 @@ func New{{.StructName}}()*{{.StructName}}{
 
 	// Updates update record
 	func (t *{{.StructName}}) Updates(db *gorm.DB, m map[string]interface{})(err error) {
-		if err = db.Model(&{{.StructName}}{}).Where("id = ?",t.ID).Updates(m).Error;err!=nil{
+		if err = db.Model(t).Where("id = ?",t.ID).Updates(m).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err)
 			err = ErrUpdate{{.StructName}} {{end}}
 			return
@@ -78,7 +78,7 @@ func New{{.StructName}}()*{{.StructName}}{
 
 	// Delete{{.StructName}}Batch delete {{.StructName}} batch
 	func Delete{{.StructName}}Batch(db *gorm.DB, ids []string)(err error){
-		if err = db.Model(&{{.StructName}}{}).Where("id in ?",ids).Delete().Error;err!=nil{
+		if err = db.Model(&{{.StructName}}{}).Delete("id in ?",ids).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 			err = ErrDelete{{.StructName}} {{end}}
 			return
@@ -93,6 +93,7 @@ func New{{.StructName}}()*{{.StructName}}{
 			err = ErrCreate{{.StructName}} {{end}}
 			return
 		}
+		return
 	}
 
 	{{$StructName := .StructName}}
@@ -174,10 +175,10 @@ import(
 	"github.com/olongfen/contrib/log"
 	"github.com/sirupsen/logrus"
 	{{- range .Structs}}
-	"{{$Mod}}/model/{{.LowerName}}"
+	"{{$Mod}}/app/model/{{.LowerName}}"
 	{{- end}}
-	"{{$Mod}}/model/common"
-	"{{$Mod}}/setting"
+	"{{$Mod}}/app/model/common"
+	"{{$Mod}}/app/setting"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/driver/postgres"	
@@ -187,7 +188,7 @@ import(
 		err error
 		tables []interface{}
 	)
-	model_common.ModelLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "models", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+	model_common.ModelLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "models", Stdout: !setting.DevEnv, P: setting.Global.FilePath.LogPatent})
 	dataSourceName := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", setting.Global.DB.Driver, setting.Global.DB.Username,
 		setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
 	if model_common.DB, err = gorm.Open(postgres.Open(dataSourceName), &gorm.Config{Logger: logger.New(model_common.ModelLog, logger.Config{

@@ -7,8 +7,8 @@ var (
 {{- $Package := .Package }}
 import(
 	"strconv"
-	"{{.Mod}}/model/{{$Package}}"
-	"{{.Mod}}/model/common"
+	"{{.Mod}}/app/model/{{$Package}}"
+	"{{.Mod}}/app/model/common"
 	"github.com/mitchellh/mapstructure"
 )
 	{{$StructName :=.StructName}}
@@ -74,7 +74,7 @@ func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Pack
 	var(
 		datas []* model_{{$Package}}.{{$StructName}}
 	)
-	if err = mapstructure.Decode(req,datas);err!=nil{
+	if err = mapstructure.Decode(req,&datas);err!=nil{
 		return
 	}
 	// if needed todo add you business logic code

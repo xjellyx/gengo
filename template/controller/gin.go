@@ -8,9 +8,9 @@ var GinTemplate = fmt.Sprintf(`package api_{{.Package}}
 {{- $Package := .Package }}
 import(
 	"github.com/gin-gonic/gin"
-	"{{.Mod}}/service/{{$Package}}"
-	"{{.Mod}}/model/{{$Package}}"
-	"{{.Mod}}/controller/response"
+	"{{.Mod}}/app/service/{{$Package}}"
+	"{{.Mod}}/app/model/{{$Package}}"
+	"{{.Mod}}/app/controller/response"
 )
 
 {{$StructName := .StructName}}
@@ -202,7 +202,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	id = c.PostForm("id")
+	if err = c.ShouldBind(&id);err!=nil{return}
 	if err = srv_{{$Package}}.Delete{{$StructName}}One(id);err!=nil{return}
 }
 
@@ -212,7 +212,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 // @Description delete {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param ids body [int] true "{{$StructName}} ID list"
+// @Param ids body []string true "{{$StructName}} ID list"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Package}}/deleteList [delete]
@@ -230,7 +230,7 @@ func (ct *Ctrl{{$StructName}}) DeleteList(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	ids = c.PostFormArray("ids")
+	if err = c.ShouldBind(&ids);err!=nil{return}
 	if err = srv_{{$Package}}.Delete{{$StructName}}Batch(ids);err!=nil{return}
 }
 
@@ -296,4 +296,188 @@ func (g *Gin) Response() {
 	return
 }
 `, "`", "`", "`", "`", "`", "`", "`", "`")
+)
+
+var (
+	InitRouterTemplate = fmt.Sprintf(`
+package router
+import (
+	"io"
+	"net/http"
+
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"github.com/olongfen/contrib/log"
+
+	"{{.Mod}}/app/controller/middleware"
+	"{{.Mod}}/app/setting"
+)
+
+// 初始化路由
+var (
+	Engine   = gin.Default()
+)
+// init 初始化路由模块
+func init() {
+	if !setting.DevEnv {
+		gin.SetMode(gin.ReleaseMode)
+		Engine.Use(gin.Logger())
+	}
+
+	// 创建记录日志的文件
+	f, _ := rotatelogs.New(
+		setting.Global.FilePath.LogDir + "/router" + setting.Global.FilePath.LogPatent+".log",
+	)
+	gin.DefaultWriter = io.MultiWriter(f)
+
+	// 添加中间件
+	Engine.Use(middleware.CORS())
+	Engine.Use(middleware.GinLogFormatter())
+	Engine.Use(gin.Recovery())
+	// 没有路由请求
+	Engine.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, map[string]interface{}{
+			"error": " 404 " + http.StatusText(http.StatusNotFound),
+		})
+	})
+	// TODO 路由
+	{
+		var api = Engine.Group("api/v1")
+		api.GET("swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+		api.Use(middleware.Common())
+
+		// 测试连接
+		api.GET("/ping", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"ping": "pong >>>>>>> update"})
+		})
+		{{range .Structs -}}
+			// {{.StructName}} router 
+			init{{.StructName}}(api)
+		{{end -}}
+
+	}
+	log.Infoln("router init success !")
+}
+`)
+)
+
+var (
+	MiddlewareTemplate = fmt.Sprintf(`package middleware
+import (
+	"fmt"
+	"net/http"
+	"strings"
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	PayPasswordHeader = "X-Pay-Password"
+	SignatureHeader   = "X-Signature"
+	Token             = "X-Token"
+)
+
+var (
+	allowHeaders = strings.Join([]string{
+		"accept",
+		"origin",
+		"Authorization",
+		"Content-Type",
+		"Content-Length",
+		"Content-Length",
+		"Accept-Encoding",
+		"Cache-Control",
+		"X-CSRF-Token",
+		"X-Requested-With",
+		Token,
+		SignatureHeader,    // 接受签名的 Header
+		PayPasswordHeader,  // 接收交易密码的 Header
+		"X-Wechat-Binding", // 激活微信帐号
+	}, ",")
+	allowMethods = strings.Join([]string{
+		http.MethodOptions,
+		http.MethodGet,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodDelete,
+	}, ",")
+)
+
+// CORS
+func CORS() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		origin := ctx.GetHeader("Origin")
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		ctx.Writer.Header().Set("Access-Control-Allow-Headers", allowHeaders)
+		ctx.Writer.Header().Set("Access-Control-Allow-Methods", allowMethods)
+
+		if ctx.Request.Method == http.MethodOptions {
+			ctx.AbortWithStatus(204)
+			return
+		}
+
+		ctx.Next()
+	}
+}
+
+// Common
+func Common() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		header := context.Writer.Header()
+		// alone dns prefect
+		header.Set("X-DNS-Prefetch-Control", "on")
+		// IE No Open
+		header.Set("X-Download-Options", "noopen")
+		// not cache
+		header.Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+		header.Set("Expires", "max-age=0")
+		// Content Security Policy
+		header.Set("Content-Security-Policy", "default-src 'self'")
+		// xss protect
+		// it will caught some problems is old IE
+		header.Set("X-XSS-Protection", "1; mode=block")
+		// Referrer Policy
+		header.Set("Referrer-Header", "no-referrer")
+		// cros frame, allow same origin
+		header.Set("X-Frame-Options", "SAMEORIGIN")
+		// HSTS
+		header.Set("Strict-Transport-Security", "max-age=5184000;includeSubDomains")
+		// no sniff
+		header.Set("X-Content-Type-Options", "nosniff")
+	}
+}
+`) + `
+func GinLogFormatter() gin.HandlerFunc {
+	return gin.LoggerWithFormatter(
+		func(params gin.LogFormatterParams) string {
+			return fmt.Sprintf("address: %s, time: %s, method: %s, path: %s, errMessage: %s, proto: %s, code: %d, latency: %s, body: %v %v",
+				params.ClientIP, params.TimeStamp.Format("2006-01-02 15:04:05"), params.Method, params.Path,
+				params.ErrorMessage, params.Request.Proto, params.StatusCode, params.Latency,
+				params.Request.Body, "\n")
+		})
+}`
+)
+
+var (
+	StructRouterTemplate = fmt.Sprintf(`package router
+
+import  ("{{.Mod}}/app/controller/api/{{.Package}}"
+"github.com/gin-gonic/gin"
+)
+
+func init{{.StructName}}(r *gin.RouterGroup) {
+	c := &api_{{.Package}}.Ctrl{{.StructName}}{}
+	{{.Package}} := r.Group("{{.Package}}")
+	{{.Package}}.GET("get", c.GetOne)
+	{{.Package}}.GET("list", c.GetList)
+	{{.Package}}.POST("add", c.AddOne)
+	{{.Package}}.POST("addList", c.AddList)
+	{{.Package}}.PUT("edit", c.Edit)
+	{{.Package}}.DELETE("delete", c.DeleteOne)
+	{{.Package}}.DELETE("deleteList", c.DeleteList)
+}
+
+`)
 )
