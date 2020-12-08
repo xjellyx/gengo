@@ -2,7 +2,7 @@
 dir=$GOPATH
 echo $dir
 
-go build -o gengo ./cmd/gengo.go
+go build -o gengo ./cmd/gengo/main.go
 
 mv gengo $dir/bin
 

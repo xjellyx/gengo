@@ -2,7 +2,6 @@ package generate
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/olongfen/gengo/template/controller"
 	gin_main "github.com/olongfen/gengo/template/main"
@@ -120,14 +119,6 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 	}
 
 	return g, nil
-}
-
-func (g *Generator) checkConfig() (err error) {
-	if len(g.config.Imports) == 0 {
-		err = errors.New("import package dose'n set")
-		return
-	}
-	return
 }
 
 // genModel
@@ -370,9 +361,6 @@ func (g *Generator) genMain() (err error) {
 
 // Generate executes the template and store it in an internal buffer.
 func (g *Generator) Generate() *Generator {
-	if err := g.checkConfig(); err != nil {
-		panic(err)
-	}
 	if err := g.genModel(); err != nil {
 		log.Fatalln(err)
 	}
@@ -695,13 +683,12 @@ func (g *Generator) GenDocs() {
 	var (
 		err error
 	)
-
-	if err = exec.Command("swag", "init").Run(); err != nil {
+	if err = exec.Command("swag", "init", "-d", g.outputDir, "-o", g.outputDir+"/docs").Run(); err != nil {
 		if strings.Contains(err.Error(), "executable file not found in $PATH") {
 			if err = exec.Command("go", "get", "-u", "github.com/swaggo/swag/cmd/swag").Run(); err != nil {
 				log.Fatalln(err)
 			} else {
-				if err = exec.Command("swag", "init").Run(); err != nil {
+				if err = exec.Command("swag", "init", "-d", g.outputDir, "-o", g.outputDir+"/docs").Run(); err != nil {
 					log.Fatalln(err)
 				}
 			}

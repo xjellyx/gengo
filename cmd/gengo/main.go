@@ -1,64 +1,88 @@
 package main
 
 import (
-	"flag"
-	"os"
-	"strings"
-
 	"github.com/olongfen/gengo/generate"
 	"github.com/olongfen/gengo/parse"
+	"github.com/urfave/cli/v2"
+	"log"
+	"os"
+)
+
+const (
+	transformErrorFlag = "transformError"
+	inputDirFlag       = "input"
+	outputDirFlag      = "output"
+	modFlag            = "mod"
+	webFlag            = "web"
+	ormFlag            = "orm"
 )
 
 var (
-	tfErr bool
-	input,
-	output,
-	mod,
-	web,
-	orm,
-	imports string
+	initFlags = []cli.Flag{
+		&cli.StringFlag{
+			Name:     outputDirFlag,
+			Aliases:  []string{"o"},
+			Usage:    "The name of schema output to generate output for, comma separated",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:     inputDirFlag,
+			Aliases:  []string{"i"},
+			Usage:    "The name of the input go file path",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:     modFlag,
+			Aliases:  []string{"m"},
+			Usage:    "The name of project go module",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:     webFlag,
+			Aliases:  []string{"w"},
+			Usage:    "The name of project web frame",
+			Required: false,
+			Value:    "gin",
+		},
+		&cli.StringFlag{
+			Name:     ormFlag,
+			Aliases:  []string{"r"},
+			Usage:    "The name of project orm frame",
+			Required: false,
+			Value:    "gorm",
+		}, &cli.BoolFlag{
+			Name:     transformErrorFlag,
+			Aliases:  []string{"t"},
+			Usage:    "The name of transform db err",
+			Required: false,
+			Value:    true,
+		},
+	}
 )
 
-func parseFlags() {
-
-	flag.StringVar(&output, "output", "", "[Required] The name of schema output to generate output for, comma separated")
-	flag.StringVar(&input, "input", "", "[Required] The name of the input go file path")
-	flag.StringVar(&mod, "mod", "", "[Required] The name of project go module")
-	flag.StringVar(&web, "web", "", "[Option] The name of project web frame")
-	flag.StringVar(&orm, "orm", "", "[Option] The name of project orm frame")
-	flag.StringVar(&imports, "imports", "", "[Required] The name of the import  to import package")
-	flag.BoolVar(&tfErr, "tfErr", false, "[Option] The name of transform db err")
-	flag.Parse()
-
-	if len(input) == 0 || len(mod) == 0 || len(output) == 0 {
-		flag.Usage()
-		os.Exit(1)
-	}
-
-}
-
-func main() {
-	parseFlags()
+func initAction(c *cli.Context) error {
 	var (
 		err error
 		gen *generate.Generator
 	)
-
-	if gen, err = generate.NewGenerator(output, parse.NewParser(input), parse.Config{
-		Imports: func() (ret []string) {
-			s := strings.Split(imports, ",")
-			for _, v := range s {
-				ret = append(ret, v)
-			}
-			return ret
-		}(),
-		Mod:   mod,
-		TFErr: tfErr,
-		WEB:   web,
-		ORM:   orm,
+	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(c.String(inputDirFlag)), parse.Config{
+		Mod:   c.String(modFlag),
+		TFErr: c.Bool(transformErrorFlag),
+		WEB:   c.String(webFlag),
+		ORM:   c.String(ormFlag),
 	}); err != nil {
-		panic(err)
+		return err
 	}
 	gen.Generate().Format().Flush().GenDocs()
+	return nil
+}
 
+func main() {
+	app := cli.NewApp()
+	app.Action = initAction
+	app.Flags = initFlags
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

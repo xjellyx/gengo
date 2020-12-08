@@ -7,11 +7,6 @@ var (
 {{$TFErr :=.TFErr}}
 import (
 {{- if $TFErr}} "errors" {{end}}
-	{{- range $val := .Imports}}
-		{{- if $val}}
-			"{{$val}}"
-		{{end}}
-	{{end}}
 	"{{.Mod}}/app/model/common"
 	"gorm.io/gorm"
 )
