@@ -32,7 +32,6 @@ type StructData struct {
 type Config struct {
 	Package string
 	Imports []string
-	LogName string
 	TFErr   bool
 	Mod     string
 	ORM     string

@@ -324,13 +324,13 @@ func init() {
 	if !setting.DevEnv {
 		gin.SetMode(gin.ReleaseMode)
 		Engine.Use(gin.Logger())
+		// 创建记录日志的文件
+		f, _ := rotatelogs.New(
+			setting.Global.FilePath.LogDir + "/router" + setting.Global.FilePath.LogPatent+".log",
+		)
+		gin.DefaultWriter = io.MultiWriter(f)
 	}
 
-	// 创建记录日志的文件
-	f, _ := rotatelogs.New(
-		setting.Global.FilePath.LogDir + "/router" + setting.Global.FilePath.LogPatent+".log",
-	)
-	gin.DefaultWriter = io.MultiWriter(f)
 
 	// 添加中间件
 	Engine.Use(middleware.CORS())

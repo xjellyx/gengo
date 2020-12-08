@@ -12,6 +12,7 @@ import (
 	"go/format"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"text/template"
@@ -646,7 +647,7 @@ func (g *Generator) flushMain() (err error) {
 }
 
 // Flush function writes the output to the output file.
-func (g *Generator) Flush() {
+func (g *Generator) Flush() *Generator {
 	var (
 		err error
 		wg  = sync.WaitGroup{}
@@ -686,4 +687,27 @@ func (g *Generator) Flush() {
 	if err = g.flushMain(); err != nil {
 		log.Fatalln(err)
 	}
+	return g
+}
+
+// GenDocs　gen swagger doc
+func (g *Generator) GenDocs() {
+	var (
+		err error
+	)
+
+	if err = exec.Command("swag", "init").Run(); err != nil {
+		if strings.Contains(err.Error(), "executable file not found in $PATH") {
+			if err = exec.Command("go", "get", "-u", "github.com/swaggo/swag/cmd/swag").Run(); err != nil {
+				log.Fatalln(err)
+			} else {
+				if err = exec.Command("swag", "init").Run(); err != nil {
+					log.Fatalln(err)
+				}
+			}
+		} else {
+			log.Fatalln(err)
+		}
+	}
+	return
 }
