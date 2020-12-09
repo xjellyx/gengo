@@ -30,6 +30,13 @@ type Project struct {
 type Serve struct {
 	ServerAddr string
 	ServerPort string
+	IsTLS      bool
+	TLS        TLS
+}
+
+type TLS struct {
+	Cert string
+	Key  string
 }
 
 // Database database config
