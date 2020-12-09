@@ -40,5 +40,33 @@ GLOBAL OPTIONS:
 
 ## Usage
 ```conlose
+- mkdir demo 
+- cd demo 
+- go mod init demo 
+- echo '
+  package main
+  
+  import("gorm.io/gorm")
+  
+  type User struct {
+          gorm.Model
+          Name string 
+          Age int
+  }
+  ' >> gen.go
+- gengo -i ./gen.go -o . -m demo
 
 ```
+
+## Todo list
+- add orm frame 
+   - xorm 
+-  add web frame
+   - echo
+   - iris
+   
+## Example
+- [demo](github.com/olongfen/demo)
+
+## License
+- MIT License
