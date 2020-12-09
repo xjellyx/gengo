@@ -1,5 +1,5 @@
-# gengo 
-> gengo It is an automatic code generation tool that uses go:generate to generate corresponding addition, deletion, modification, and inspection logic and interfaces by defining a structure
+## gengo 
+> gengo It is an automatic golang code  to generate corresponding addition, deletion, modification, and inspection logic and interfaces by defining a structure
 > 
 > ** Thank you!**
 
@@ -8,23 +8,37 @@
 go get -u github.com/olongfen/gengo/cmd/gengo
 ```
 
-## gengo clu
+## gengo cli
 ```console
 gengo --help
 
-Usage of gengo:
-  -imports string
-        [Required] The name of the import  to import package
-  -input string
-        [Required] The name of the input go file path
-  -mod string
-        [Required] The name of project go module
-  -orm string
-        [Option] The name of project orm frame
-  -output string
-        [Required] The name of schema output to generate output for, comma separated
-  -tfErr
-        [Option] The name of transform db err
-  -web string
-        [Option] The name of project web frame
+NAME:
+   gengo - A new cli application
+
+USAGE:
+   gengo [global options] command [command options] [arguments...]
+
+COMMANDS:
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --output value, -o value  The name of schema output to generate output for, comma separated
+   --input value, -i value   The name of the input go file path
+   --mod value, -m value     The name of project go module
+   --web value, -w value     The name of project web frame (default: "gin")
+   --orm value, -r value     The name of project orm frame (default: "gorm")
+   --transformError, -t      The name of transform db err (default: true)
+   --help, -h                show help (default: false)
+
+```
+
+## Supported Web Frameworks
+- [gin](github.com/gin-gonic/gin)
+
+## Supported Orm Frameworks
+- [gorm](gorm.io/gorm)
+
+## Usage
+```conlose
+
 ```

@@ -176,28 +176,57 @@ import(
 	"{{$Mod}}/app/setting"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"gorm.io/driver/postgres"	
+	"gorm.io/driver/clickhouse"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/driver/sqlserver"
 )
-	func init(){
+func init() {
 	var (
-		err error
-		tables []interface{}
+		err            error
+		tables         []interface{}
+		dataSourceName string
+		dialector      gorm.Dialector
 	)
 	model_common.ModelLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "models", Stdout: !setting.DevEnv, P: setting.Global.FilePath.LogPatent})
-	dataSourceName := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", setting.Global.DB.Driver, setting.Global.DB.Username,
-		setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
-	if model_common.DB, err = gorm.Open(postgres.Open(dataSourceName), &gorm.Config{Logger: logger.New(model_common.ModelLog, logger.Config{
+	switch setting.Global.DB.Driver {
+	case "postgres":
+		dataSourceName = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", setting.Global.DB.Username,
+			setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
+		//dataSourceName = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", setting.Global.DB.Driver, setting.Global.DB.Username,
+		//	setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
+		dialector = postgres.Open(dataSourceName)
+	case "mysql":
+		dataSourceName = fmt.Sprintf("%s:%s@tcp(%s:%s)/%scharset=utf8mb4&parseTime=True&loc=Local", setting.Global.DB.Username,
+			setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
+		dialector = mysql.Open(dataSourceName)
+	case "sqlite":
+		dialector = sqlite.Open(setting.Global.DB.Source)
+	case "sqlserver":
+		dataSourceName = fmt.Sprintf("%s://%s:%s@%s:%s?database=%s", setting.Global.DB.Driver, setting.Global.DB.Username,
+			setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
+		dialector = sqlserver.Open(dataSourceName)
+	case "clickhouse":
+		dataSourceName = fmt.Sprintf("tcp://%s:%sdatabase=%s&username=%s&password=%s&read_timeout=10&write_timeout=30", setting.Global.DB.Host, setting.Global.DB.Port,
+			setting.Global.DB.DatabaseName, setting.Global.DB.Username, setting.Global.DB.Password)
+		dialector = clickhouse.Open(dataSourceName)
+	default:
+		log.Fatalln("dose not support this sql driver >>> ", setting.Global.DB.Driver)
+	}
+
+	if model_common.DB, err = gorm.Open(dialector, &gorm.Config{Logger: logger.New(model_common.ModelLog, logger.Config{
 		Colorful: true})}); err != nil {
 		logrus.Fatal(err)
 	}
 	if setting.DevEnv {
 		model_common.DB = model_common.DB.Debug()
 	}
+	tables = append(tables, &model_user.User{})
 
-	{{- range  .Structs}}
-		tables = append(tables,&model_{{.LowerName}}.{{.StructName}}{})
-	{{end}}
-	err = model_common.DB.AutoMigrate(tables ...)
+	tables = append(tables, &model_admin.Admin{})
+
+	err = model_common.DB.AutoMigrate(tables...)
 	if err != nil {
 		panic(err)
 	}
