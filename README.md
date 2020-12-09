@@ -66,7 +66,7 @@ GLOBAL OPTIONS:
    - iris
    
 ## Example
-- [demo](github.com/olongfen/demo)
+- [demo](https://github.com/olongfen/demo)
 
 ## License
 - MIT License
