@@ -1,5 +1,5 @@
 ## gengo 
-> gengo It is an automatic golang code  to generate corresponding addition, deletion, modification, and inspection logic and interfaces by defining a structure
+> gengo It is an automatic create golang code  to generate corresponding addition, deletion, modification, and inspection logic and interfaces by defining a structure
 > 
 > ** Thank you!**
 
