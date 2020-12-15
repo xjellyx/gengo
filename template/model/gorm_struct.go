@@ -92,9 +92,37 @@ func New{{.StructName}}()*{{.StructName}}{
 	}
 
 	{{$StructName := .StructName}}
+	{{$Int :=  "int" }}
+	{{$Int8  :="int8" }}
+	{{$Int16 :="int16" }}
+	{{$Int32 :="int32" }}
+	{{$Int64 :="int64" }}
+	{{$Float64 :="float64" }}
+	{{$Float32 :="float32" }}
+	{{$Time :="time.Time" }}
 	//  Query{{$StructName}}Form query form
 	type Query{{$StructName}}Form struct{
-	{{- range .Fields}}{{- if not .IsUnique}}		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self{{- end}}
+{{- range .Fields}}{{- if not .IsUnique}}		
+{{- if eq .Type $Time -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Int -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Int8 -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Int16 -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Int32 -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Int64 -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Float32 -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else if eq .Type $Float64 -}}
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- else -}}
+		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+{{- end}}	
+{{- end}}
 {{end}}
 		Order []string %sjson:"order" form:"order"%s
 		PageNum int %sjson:"pageNum" form:"pageNum" binding:"required"%s
@@ -123,11 +151,45 @@ func New{{.StructName}}()*{{.StructName}}{
 		}
 	{{- range .Fields}}
 		{{- if not .IsUnique}}
+		{{- if eq .Type $Time}}
 		if q.{{.FieldName}}!=nil{
 			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
 		}
-		{{- end}}
-	{{- end}}
+{{- else if eq .Type $Int}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else if eq .Type $Int8}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else if eq .Type $Int16}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else if eq .Type $Int32}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else if eq .Type $Int64}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else if eq .Type $Float32}}
+	if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else if eq .Type $Float64}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		}
+{{- else -}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}} = ?",*q.{{.FieldName}})
+		}
+{{- end}}
+{{end}}
+{{- end}}
 		if err =db.Find(&ret).Error;err!=nil{
 			return
 		}
@@ -163,7 +225,7 @@ func New{{.StructName}}()*{{.StructName}}{
 		}
 		{{- end}}
 	{{end}}
-`, "`", "`", "`", "`", "`", "`", "`", "`")
+`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
 	GORMInitDB = `
 package model
 {{$Mod :=.Mod}}
