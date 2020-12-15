@@ -285,15 +285,15 @@ func init() {
 		logrus.Fatal(err)
 	}
 	if setting.DevEnv {
+		{{- range .Structs}}
+			tables = append(tables, &model_{{.LowerName}}.{{.StructName}}{})
+		{{- end}}
+
 		model_common.DB = model_common.DB.Debug()
-	}
-	tables = append(tables, &model_user.User{})
-
-	tables = append(tables, &model_admin.Admin{})
-
-	err = model_common.DB.AutoMigrate(tables...)
-	if err != nil {
-		panic(err)
+		err = model_common.DB.AutoMigrate(tables...)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	log.Infoln("database init success !")
