@@ -8,7 +8,6 @@ var (
 import(
 	"strconv"
 	"{{.Mod}}/app/model/{{$Package}}"
-	"{{.Mod}}/app/model/common"
 	"github.com/mitchellh/mapstructure"
 )
 	{{$StructName :=.StructName}}
@@ -58,7 +57,7 @@ func Add{{$StructName}}One(req *Add{{$StructName}}ReqForm)(ret *model_{{$Package
 	}
 	// if needed todo add you business logic code
 
-	if err = data.Add(model_common.DB);err!=nil{
+	if err = data.Add();err!=nil{
 		return
 	}
 
@@ -78,7 +77,7 @@ func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Pack
 		return
 	}
 	// if needed todo add you business logic code
-	if err =model_{{$Package}}.Add{{$StructName}}Batch(model_common.DB,datas);err!=nil{
+	if err =model_{{$Package}}.Add{{$StructName}}Batch(datas);err!=nil{
 		return	
 	}
 	// 
@@ -96,7 +95,7 @@ func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(ret *model_{{$Packa
 	)
 	// if needed todo add you business logic code code
 	
-	if err = data.SetQueryByID(uint(req.ID)).Updates(model_common.DB,req.ToMAP());err!=nil{return}
+	if err = data.SetQueryByID(uint(req.ID)).Updates(req.ToMAP());err!=nil{return}
 	
 	// 
 	ret = data
@@ -110,7 +109,7 @@ func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(re
 	)
 	// if needed todo add you business logic code code
 	
-	if datas,err = model_{{$Package}}.Get{{$StructName}}List(model_common.DB,req);err!=nil{return}
+	if datas,err = model_{{$Package}}.Get{{$StructName}}List(req);err!=nil{return}
 	
 	// 
 	ret = datas
@@ -123,7 +122,7 @@ func Get{{$StructName}}One(in string)(ret *model_{{$Package}}.{{$StructName}}, e
 		id,_ = strconv.Atoi(in)
 		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID(uint(id))
 	)
-	if err = d.GetByID(model_common.DB);err!=nil{return}
+	if err = d.GetByID();err!=nil{return}
 
 	ret = d
 	return   
@@ -137,13 +136,13 @@ func Delete{{$StructName}}One(in string)( err error) {
 		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID(uint(id))
 	)
 	// if needed todo add you business logic code
-	return   d.DeleteByID(model_common.DB)
+	return   d.DeleteByID()
 }
 
 // Delete{{$StructName}}Batch delete {{$StructName}} 
 func Delete{{$StructName}}Batch(ids []string)( err error) {
 	// if needed todo add you business logic code
-	return   model_{{$Package}}.Delete{{$StructName}}Batch(model_common.DB,ids)
+	return   model_{{$Package}}.Delete{{$StructName}}Batch(ids)
 }
 
 `, "`", "`", "`", "`", "`", "`")

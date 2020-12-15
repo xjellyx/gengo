@@ -384,6 +384,7 @@ func (g *Generator) formatModel() {
 	for k, _ := range g.modelBuf {
 		formatedOutput, err := format.Source(g.modelBuf[k].Bytes())
 		if err != nil {
+			continue
 			log.Fatalln(err)
 		}
 		g.modelBuf[k] = bytes.NewBuffer(formatedOutput)
@@ -693,7 +694,7 @@ func (g *Generator) GenDocs() {
 				}
 			}
 		} else {
-			log.Fatalln(err)
+			log.Warnln(err)
 		}
 	}
 	return

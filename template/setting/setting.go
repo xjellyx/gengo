@@ -49,6 +49,7 @@ type Database struct {
 	Password     string
 	MaxIdleConn  int
 	MaxOpenConn  int
+ 	Source string
 }
 
 // FilePath file save path
