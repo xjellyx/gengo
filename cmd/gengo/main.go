@@ -22,7 +22,7 @@ var (
 		&cli.StringFlag{
 			Name:     outputDirFlag,
 			Aliases:  []string{"o"},
-			Usage:    "The name of schema output to generate output for, comma separated",
+			Usage:    "The name of schema output to generate output",
 			Required: true,
 		},
 		&cli.StringFlag{

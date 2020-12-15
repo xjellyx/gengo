@@ -22,7 +22,7 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --output value, -o value  The name of schema output to generate output for, comma separated
+   --output value, -o value  The name of schema output to generate output 
    --input value, -i value   The name of the input go file path
    --mod value, -m value     The name of project go module
    --web value, -w value     The name of project web frame (default: "gin")
