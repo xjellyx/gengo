@@ -149,7 +149,7 @@ func New{{.StructName}}()*{{.StructName}}{
 			q.PageNum = (q.PageNum - 1) * q.PageSize
 			db = db.Offset(q.PageNum)
 		}
-	{{- range .Fields}}
+	{{range .Fields}}
 		{{- if not .IsUnique}}
 		{{- if eq .Type $Time}}
 		if q.{{.FieldName}}!=nil{
