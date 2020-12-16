@@ -113,6 +113,9 @@ func (p *Parser) ParserStruct() (err error) {
 						if fd.Tag != nil && (strings.Contains(fd.Tag.Value, "primary") ||
 							strings.Contains(fd.Tag.Value, "unique")) {
 							fieldData.IsUnique = true
+							if strings.Contains(fd.Tag.Value, "primary") {
+								fieldData.IsBaseModel = true
+							}
 						}
 						data.Fields = append(data.Fields, fieldData)
 					}
