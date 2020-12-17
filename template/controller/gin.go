@@ -247,7 +247,7 @@ import (
 
 const (
 	CodeSuccess = 0
-	CodeFail    = 4000
+	CodeFail    = -1
 )
 
 type Gin struct {
