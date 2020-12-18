@@ -124,7 +124,10 @@ func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(re
 // Get{{$StructName}}One get {{$StructName}} 
 func Get{{$StructName}}One(in string)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	var(
-		id,_ = strconv.Atoi(in)
+		id int64
+	)
+	if 	id,err = strconv.ParseInt(in, 10, 64);err!=nil{return}
+	var(
 		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID({{$IDType}}(id))
 	)
 	if err = d.GetByID();err!=nil{return}
@@ -135,9 +138,11 @@ func Get{{$StructName}}One(in string)(ret *model_{{$Package}}.{{$StructName}}, e
 
 // Delete{{$StructName}}One delete {{$StructName}} 
 func Delete{{$StructName}}One(in string)( err error) {
-
 	var(
-	id,_ = strconv.Atoi(in)
+		id int64
+	)
+	if 	id,err = strconv.ParseInt(in, 10, 64);err!=nil{return}
+	var(
 		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID({{$IDType}}(id))
 	)
 	// if needed todo add you business logic code
