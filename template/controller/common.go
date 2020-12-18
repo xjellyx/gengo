@@ -13,7 +13,8 @@ import(
 
 
 var(
-	ControlLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "controller", Stdout: !setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+	ControlLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "controller", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+	RouterGroupFunctions []func(group *gin.RouterGroup)
 )
 `)
 )

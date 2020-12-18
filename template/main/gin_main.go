@@ -18,9 +18,9 @@ import (
 	"github.com/olongfen/contrib/log"
 	"github.com/sirupsen/logrus"
 
-	"{{.Mod}}/app/controller/router"
-	_ "{{.Mod}}/app/controller/router"
-	_ "{{.Mod}}/app/model/initdb"
+	"{{.Mod}}/app/controller/router/init_router"
+	_ "{{.Mod}}/app/controller/router/init_router"
+	_ "{{.Mod}}/app/model/init_db"
 	"{{.Mod}}/app/setting"
 	_ "{{.Mod}}/app/setting"
 	_ "{{.Mod}}/docs"

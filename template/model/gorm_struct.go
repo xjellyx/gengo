@@ -19,8 +19,13 @@ import (
 	ErrUpdate{{.StructName}} = errors.New("update {{.StructName}} failed")
 )
 {{end}}
-// {{.StructName}} 
+// {{.StructName}}
 type {{.StructName}} {{.StructDetail}}
+
+func init(){
+	model_common.Tables = append(model_common.Tables,&{{.StructName}}{})
+}
+
 // New{{.StructName}} new
 func New{{.StructName}}()*{{.StructName}}{
 	return new({{.StructName}})
@@ -47,7 +52,7 @@ func New{{.StructName}}()*{{.StructName}}{
 
 	// Updates update record
 	func (t *{{.StructName}}) Updates( m map[string]interface{},dbs ...*gorm.DB)(err error) {
-		if err = model_common.GetDB(dbs...).Model(t).Where("id = ?",t.ID).Updates(m).Error;err!=nil{
+		if err = model_common.GetDB(dbs...).Model(t).Updates(m).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err)
 			err = ErrUpdate{{.StructName}} {{end}}
 			return
@@ -206,7 +211,7 @@ func New{{.StructName}}()*{{.StructName}}{
 
 		// GetBy{{.FieldName}} get one record by {{.FieldName}}
 		func (t *{{$StructName}})GetBy{{.FieldName}}(dbs ...*gorm.DB)(err error){
-			if err = model_common.GetDB(dbs...).First(t,"{{.DBName}} = ?",t.{{.FieldName}}).Error;err!=nil{
+			if err = model_common.GetDB(dbs...).First(t,{{ if not .IsBaseModel }}"{{.DBName}} = ?",t.{{.FieldName}} {{end}}).Error;err!=nil{
 				{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 				err = ErrGet{{$StructName}} {{end}}
 				return
@@ -216,7 +221,7 @@ func New{{.StructName}}()*{{.StructName}}{
 
 		// DeleteBy{{.FieldName}} delete record by {{.FieldName}}
 		func (t *{{$StructName}}) DeleteBy{{.FieldName}}(dbs ...*gorm.DB)(err error) {
-			if err= model_common.GetDB(dbs...).Delete(t,"{{.DBName}} = ?",t.{{.FieldName}}).Error;err!=nil{
+			if err= model_common.GetDB(dbs...).Delete(t,{{ if not .IsBaseModel }}"{{.DBName}} = ?",t.{{.FieldName}}{{end}}).Error;err!=nil{
 				{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 				err = ErrDelete{{$StructName}} {{end}}
 				return
@@ -235,7 +240,7 @@ import(
 	"github.com/olongfen/contrib/log"
 	"github.com/sirupsen/logrus"
 	{{- range .Structs}}
-	"{{$Mod}}/app/model/{{.LowerName}}"
+	_"{{$Mod}}/app/model/{{.LowerName}}"
 	{{- end}}
 	"{{$Mod}}/app/model/common"
 	"{{$Mod}}/app/setting"
@@ -250,11 +255,10 @@ import(
 func init() {
 	var (
 		err            error
-		tables         []interface{}
 		dataSourceName string
 		dialector      gorm.Dialector
 	)
-	model_common.ModelLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "models", Stdout: !setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+	model_common.ModelLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "models", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
 	switch setting.Global.DB.Driver {
 	case "postgres":
 		dataSourceName = fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", setting.Global.DB.Username,
@@ -285,12 +289,8 @@ func init() {
 		logrus.Fatal(err)
 	}
 	if setting.DevEnv {
-		{{- range .Structs}}
-			tables = append(tables, &model_{{.LowerName}}.{{.StructName}}{})
-		{{- end}}
-
 		model_common.DB = model_common.DB.Debug()
-		err = model_common.DB.AutoMigrate(tables...)
+		err = model_common.DB.AutoMigrate(model_common.Tables...)
 		if err != nil {
 			panic(err)
 		}

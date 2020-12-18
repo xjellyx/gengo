@@ -18,7 +18,7 @@ type FieldData struct {
 
 
 var(
-	ServiceLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "service", Stdout: !setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+	ServiceLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "service", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
 	DB *gorm.DB
 )
 `, "`", "`", "`", "`")

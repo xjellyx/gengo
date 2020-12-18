@@ -10,6 +10,11 @@ import(
 	"{{.Mod}}/app/model/{{$Package}}"
 	"github.com/mitchellh/mapstructure"
 )
+{{$ID := "id"}}
+{{$IDType :="" }}
+{{range .Fields}}
+{{if eq .DBName  $ID  }} {{$IDType = .Type}} {{end}}
+{{end}}
 	{{$StructName :=.StructName}}
 // Add{{$StructName}}ReqForm
 type Add{{$StructName}}ReqForm struct {
@@ -95,7 +100,7 @@ func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(ret *model_{{$Packa
 	)
 	// if needed todo add you business logic code code
 	
-	if err = data.SetQueryByID(uint(req.ID)).Updates(req.ToMAP());err!=nil{return}
+	if err = data.SetQueryByID({{$IDType}}(req.ID)).Updates(req.ToMAP());err!=nil{return}
 	
 	// 
 	ret = data
@@ -120,7 +125,7 @@ func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(re
 func Get{{$StructName}}One(in string)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	var(
 		id,_ = strconv.Atoi(in)
-		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID(uint(id))
+		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID({{$IDType}}(id))
 	)
 	if err = d.GetByID();err!=nil{return}
 
@@ -133,7 +138,7 @@ func Delete{{$StructName}}One(in string)( err error) {
 
 	var(
 	id,_ = strconv.Atoi(in)
-		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID(uint(id))
+		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID({{$IDType}}(id))
 	)
 	// if needed todo add you business logic code
 	return   d.DeleteByID()

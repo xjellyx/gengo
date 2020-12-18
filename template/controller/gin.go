@@ -154,7 +154,7 @@ func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 // @Description get {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param {} body model_{{$Package}}.Query{{$StructName}}Form true "获取{{$StructName}}列表form"
+// @Param {} query model_{{$Package}}.Query{{$StructName}}Form true "获取{{$StructName}}列表form"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Package}}/list  [get]
@@ -322,6 +322,7 @@ func (g *Gin) Response() {
 var (
 	InitRouterTemplate = fmt.Sprintf(`
 package router
+{{$Mod :=.Mod}}
 import (
 	"io"
 	"net/http"
@@ -332,8 +333,12 @@ import (
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"github.com/olongfen/contrib/log"
 
+	{{- range .Structs}}
+	_"{{$Mod}}/app/controller/router/{{.LowerName}}"
+	{{- end}}
 	"{{.Mod}}/app/controller/middleware"
 	"{{.Mod}}/app/setting"
+	"{{.Mod}}/app/controller/common"
 )
 
 // 初始化路由
@@ -373,10 +378,9 @@ func init() {
 		api.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"ping": "pong >>>>>>> update"})
 		})
-		{{range .Structs -}}
-			// {{.StructName}} router 
-			init{{.StructName}}(api)
-		{{end -}}
+		for _,v:=range ctrl_common.RouterGroupFunctions{
+			v(api)
+		}
 
 	}
 	log.Infoln("router init success !")
@@ -485,6 +489,7 @@ var (
 	StructRouterTemplate = fmt.Sprintf(`package router
 
 import  ("{{.Mod}}/app/controller/api/{{.Package}}"
+"{{.Mod}}/app/controller/common"
 "github.com/gin-gonic/gin"
 )
 
@@ -499,6 +504,11 @@ func init{{.StructName}}(r *gin.RouterGroup) {
 	{{.Package}}.DELETE("delete", c.DeleteOne)
 	{{.Package}}.DELETE("deleteList", c.DeleteList)
 }
+
+func init() {
+ctrl_common.RouterGroupFunctions = append(ctrl_common.RouterGroupFunctions,init{{.StructName}})
+}
+
 
 `)
 )

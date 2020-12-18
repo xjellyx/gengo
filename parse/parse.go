@@ -24,8 +24,9 @@ type Field struct {
 // StructData struct data
 type StructData struct {
 	Config
-	StructDetail string   // struct detail
-	StructName   string   // struct name
+	StructDetail string // struct detail
+	StructName   string // struct name
+	LowerName    string
 	Fields       []*Field // struct field
 }
 
@@ -88,6 +89,7 @@ func (p *Parser) ParserStruct() (err error) {
 					data = new(StructData)
 				)
 				data.StructName = ts.Name.Name
+				data.LowerName = strings.ToLower(ts.Name.Name)
 
 				var structType *ast.StructType
 				if structType, ok = ts.Type.(*ast.StructType); !ok {

@@ -3,6 +3,7 @@ package generate
 import (
 	"bytes"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"github.com/olongfen/gengo/template/controller"
 	gin_main "github.com/olongfen/gengo/template/main"
 	"github.com/olongfen/gengo/template/service"
@@ -468,7 +469,7 @@ func (g *Generator) Format() *Generator {
 // flushModel
 func (g *Generator) flushModel() (err error) {
 	for k, _ := range g.modelBuf {
-		s := strings.ToLower(k)
+		s := gorm.ToDBName(k)
 		dir := g.outputDir + "/app/model/" + s
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
@@ -489,7 +490,7 @@ func (g *Generator) flushModel() (err error) {
 
 func (g *Generator) flushService() (err error) {
 	for k, _ := range g.serviceBuf {
-		s := strings.ToLower(k)
+		s := gorm.ToDBName(k)
 		dir := g.outputDir + "/app/service/" + s
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
@@ -563,7 +564,7 @@ func (g *Generator) flushSetting() (err error) {
 // flushController
 func (g *Generator) flushController() (err error) {
 	for k, _ := range g.controlBuf {
-		s := strings.ToLower(k)
+		s := gorm.ToDBName(k)
 		var (
 			dir string
 		)
@@ -590,11 +591,11 @@ func (g *Generator) flushController() (err error) {
 	}
 	// 生成router代码
 	for k, _ := range g.routerBuf {
-		s := strings.ToLower(k)
+		s := gorm.ToDBName(k)
 		var (
 			dir string
 		)
-		dir = g.outputDir + "/app/controller/router/"
+		dir = g.outputDir + "/app/controller/router/" + s
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
 				return
