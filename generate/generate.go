@@ -477,7 +477,7 @@ func (g *Generator) flushModel() (err error) {
 			}
 		}
 		filename := dir + "/gen_" + s + ".go"
-		if utils.Exists(filename) {
+		if utils.Exists(filename) && k != initDB {
 			continue
 		}
 
@@ -602,7 +602,7 @@ func (g *Generator) flushController() (err error) {
 			}
 		}
 		filename := dir + "/gen_" + s + ".go"
-		if utils.Exists(filename) {
+		if utils.Exists(filename) && k != initRouter {
 			continue
 		}
 
