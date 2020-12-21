@@ -1,16 +1,13 @@
 ## gengo 
-> gengo It is an automatic create golang code  to generate corresponding addition, deletion, modification, and inspection logic and interfaces by defining a structure
-> 
-> ** Thank you!**
+    一个通过定义golang结构体自动生成curd代码，根据mvc模型生成三层结构代码，初始化项目完修改配置文件直接可以运行，无需自己搭建项目，已经生成的代码不会覆盖，
+自动生成swagger文档
 
-## [中文文档](ZH_README.md)
-
-## install
+## 安装
 ```console
 go get -u github.com/olongfen/gengo/cmd/gengo
 ```
 
-## gengo cli
+## gengo 命令
 ```console
 gengo --help
 
@@ -34,13 +31,13 @@ GLOBAL OPTIONS:
 
 ```
 
-## Supported Web Frameworks
+## Web 框架
 - [gin](github.com/gin-gonic/gin)
 
-## Supported Orm Frameworks
+## orm框架
 - [gorm](gorm.io/gorm)
 
-## Usage
+## 使用
 ```conlose
 - mkdir demo 
 - cd demo 
@@ -67,8 +64,8 @@ GLOBAL OPTIONS:
    - echo
    - iris
    
-## Example
+## 示例
 - [demo](https://github.com/olongfen/demo)
 
-## License
+## 证书
 - MIT License
