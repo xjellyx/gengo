@@ -101,7 +101,7 @@ func (p *Parser) ParserStruct() (err error) {
 					p.CacheFileByte[k] = d
 
 				}
-				data.StructDetail = string(p.CacheFileByte[k][structType.Pos()-1 : structType.End()])
+				data.StructDetail = string(p.CacheFileByte[k][structType.Pos()-1 : structType.End()-1])
 				for _, fd := range structType.Fields.List {
 					var (
 						fieldData = new(Field)
