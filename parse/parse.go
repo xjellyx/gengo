@@ -148,10 +148,16 @@ func (p *Parser) ParserStruct() (err error) {
 							updatedAtField.DBName = gorm.ToDBName("UpdatedAt")
 							data.Fields = append(data.Fields, idField, createdAtField, updatedAtField)
 						}
+						if _v.Sel.Name == "Time" {
+							fieldData.Type = "time.Time"
+							fieldData.FieldName = fd.Names[0].String()
+							fieldData.DBName = gorm.ToDBName(fieldData.FieldName)
+							fieldData.HumpName = utils.SQLColumnToHumpStyle(fieldData.DBName)
+							data.Fields = append(data.Fields, fieldData)
+						}
 
 					}
 				}
-
 				p.Structs = append(p.Structs, data)
 
 			}
