@@ -204,7 +204,7 @@ func New{{.StructName}}()*{{.StructName}}{
 	{{- range .Fields}}
 		{{- if .IsUnique}}
 			// QueryBy{{.FieldName}} query cond by {{.FieldName}}
-		func (t *{{$StructName}}) SetQueryBy{{.FieldName}}({{.DBName}} {{.Type}})*{{$StructName}} {
+		func (t *{{$StructName}}) SetQueryBy{{.FieldName}}({{.FieldName}} {{.Type}})*{{$StructName}} {
 			t.{{.FieldName}} = {{.DBName}}
 			return  t
 		}
