@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"strings"
+	"unicode"
 
 	"github.com/jinzhu/gorm"
 )
@@ -89,8 +90,7 @@ func (p *Parser) ParserStruct() (err error) {
 					data = new(StructData)
 				)
 				data.StructName = ts.Name.Name
-				data.LowerName = strings.ToLower(ts.Name.Name)
-
+				data.LowerName = gorm.ToDBName(data.StructName)
 				var structType *ast.StructType
 				if structType, ok = ts.Type.(*ast.StructType); !ok {
 					continue
@@ -109,6 +109,14 @@ func (p *Parser) ParserStruct() (err error) {
 					// 字段
 					if t, ok1 := fd.Type.(*ast.Ident); ok1 {
 						fieldData.Type = t.String()
+						var r rune
+						for _, d := range fieldData.Type {
+							r = d
+							break
+						}
+						if unicode.IsUpper(r) {
+							continue
+						}
 						fieldData.FieldName = fd.Names[0].String()
 						fieldData.DBName = gorm.ToDBName(fieldData.FieldName)
 						fieldData.HumpName = utils.SQLColumnToHumpStyle(fieldData.DBName)
@@ -120,6 +128,7 @@ func (p *Parser) ParserStruct() (err error) {
 							}
 						}
 						data.Fields = append(data.Fields, fieldData)
+						continue
 					}
 
 					// 基本model字段,自动添加,为后面搜索使用

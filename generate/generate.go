@@ -108,11 +108,11 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 	g.initDB.Mod = c.Mod
 	for _, v := range p.Structs {
 		g.initDB.Structs = append(g.initDB.Structs, Struct{
-			LowerName:  strings.ToLower(v.StructName),
+			LowerName:  v.LowerName,
 			StructName: v.StructName,
 		})
 		v.Config = c
-		v.Config.Package = strings.ToLower(v.StructName)
+		v.Config.Package = v.LowerName
 		g.modelBuf[v.StructName] = new(bytes.Buffer)
 		g.serviceBuf[v.StructName] = new(bytes.Buffer)
 		g.controlBuf[v.StructName] = new(bytes.Buffer)
