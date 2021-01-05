@@ -267,7 +267,7 @@ func init() {
 		//	setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
 		dialector = postgres.Open(dataSourceName)
 	case "mysql":
-		dataSourceName = fmt.Sprintf("%s:%s@tcp(%s:%s)/%scharset=utf8mb4&parseTime=True&loc=Local", setting.Global.DB.Username,
+		dataSourceName = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", setting.Global.DB.Username,
 			setting.Global.DB.Password, setting.Global.DB.Host, setting.Global.DB.Port, setting.Global.DB.DatabaseName)
 		dialector = mysql.Open(dataSourceName)
 	case "sqlite":
