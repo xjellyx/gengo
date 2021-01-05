@@ -6,7 +6,6 @@ var (
 	CommonTemplate = fmt.Sprintf(`package {{.Package}}
 
 import(
-"github.com/gin-gonic/gin"
 "github.com/olongfen/contrib/log"
 "gorm.io/gorm"
 )
