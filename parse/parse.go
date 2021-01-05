@@ -153,6 +153,13 @@ func (p *Parser) ParserStruct() (err error) {
 							fieldData.FieldName = fd.Names[0].String()
 							fieldData.DBName = gorm.ToDBName(fieldData.FieldName)
 							fieldData.HumpName = utils.SQLColumnToHumpStyle(fieldData.DBName)
+							switch fieldData.FieldName {
+							case "CreatedAt", "CreatedTime", "CreateTime", "CreateAt",
+								"UpdatedAt", "UpdatedTime", "UpdateTime", "UpdateAt",
+								"DeletedAt", "DeletedTime", "DeleteTime", "DeleteAt":
+								fieldData.IsBaseModel = true
+
+							}
 							data.Fields = append(data.Fields, fieldData)
 						}
 
