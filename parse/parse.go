@@ -120,10 +120,11 @@ func (p *Parser) ParserStruct() (err error) {
 						fieldData.FieldName = fd.Names[0].String()
 						fieldData.DBName = gorm.ToDBName(fieldData.FieldName)
 						fieldData.HumpName = utils.SQLColumnToHumpStyle(fieldData.DBName)
+
 						if fd.Tag != nil && (strings.Contains(fd.Tag.Value, "primary") ||
 							strings.Contains(fd.Tag.Value, "unique")) {
 							fieldData.IsUnique = true
-							if strings.Contains(fd.Tag.Value, "primary") {
+							if strings.Contains(fd.Tag.Value, "primary") || strings.Contains(fieldData.DBName, "id") {
 								fieldData.IsBaseModel = true
 							}
 						}
