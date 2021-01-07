@@ -30,6 +30,11 @@ func init(){
 func New{{.StructName}}()*{{.StructName}}{
 	return new({{.StructName}})
 }
+
+// TableName 
+func TableName()string{
+	return "{{.LowerName}}s"
+}
 	// Add add one record
 	func (t *{{.StructName}}) Add(dbs ...*gorm.DB)(err error) {
 		if err = model_common.GetDB(dbs...).Create(t).Error;err!=nil{
