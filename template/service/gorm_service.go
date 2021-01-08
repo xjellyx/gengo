@@ -6,16 +6,12 @@ var (
 	GORMServiceTemplate = fmt.Sprintf(`package srv_{{.Package}}
 {{- $Package := .Package }}
 import(
-	"strconv"
 	"{{.Mod}}/app/model/{{$Package}}"
 	"github.com/mitchellh/mapstructure"
 )
-{{$ID := "id"}}
-{{$IDType :="" }}
-{{range .Fields}}
-{{if eq .DBName  $ID  }} {{$IDType = .Type}} {{end}}
-{{end}}
-	{{$StructName :=.StructName}}
+{{$PrimaryKey := ""}}
+{{$PrimaryKeyType := ""}}
+{{$StructName :=.StructName}}
 // Add{{$StructName}}ReqForm
 type Add{{$StructName}}ReqForm struct {
 	{{- range .Fields -}}
@@ -29,24 +25,23 @@ func (a *Add{{$StructName}}ReqForm) Valid() (err error) {
 	return
 }
 
+{{$PrimaryKey:=""}}
 // Edit{{$StructName}}ReqForm
 type Edit{{$StructName}}ReqForm struct {
-	ID int64 %sjson:"id" form:"id" binding:"required"%s
 	{{range .Fields -}}
+      {{if .IsPrimary -}}
+		{{$PrimaryKey = .FieldName -}} 
+		{{$PrimaryKeyType = .Type -}}
+		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s 
+      {{end -}}
 	  {{if not .IsBaseModel -}}
-		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // if required, add binding:"required" to tag by self
+		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // if required, add binding:"required" to tag by self
 	  {{end -}}
 	{{- end -}}
 }
 
 func (a *Edit{{$StructName}}ReqForm) Valid() (err error) {
 	return
-}
-
-func (a *Edit{{$StructName}}ReqForm)ToMAP()(ret map[string]interface{}){
-	ret= make(map[string]interface{},0)
-	{{range .Fields}}{{if not .IsBaseModel}} if a.{{.FieldName}}!=nil{ ret["{{.DBName}}"] = *a.{{.FieldName}}};{{end}}{{end}}
-	return 
 }
 
 // Add{{$StructName}}One add
@@ -91,7 +86,7 @@ func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Pack
 }
 
 // Edit{{$StructName}}One edit
-func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -99,11 +94,11 @@ func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(ret *model_{{$Packa
 		data =model_{{$Package}}.New{{$StructName}}()
 	)
 	// if needed todo add you business logic code code
-	
-	if err = data.SetQueryByID({{$IDType}}(req.ID)).Updates(req.ToMAP());err!=nil{return}
-	
-	// 
-	ret = data
+	if err = mapstructure.Decode(req, data); err != nil {
+		return
+	}
+	if err = data.SetQueryBy{{$PrimaryKey}}(req.{{$PrimaryKey}}).Update();err!=nil{return}
+
 	return
 }
 
@@ -121,32 +116,50 @@ func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(re
 	return
 }
 
+// Operating{{$StructName}}OneReqForm
+type Operating{{$StructName}}OneReqForm struct {
+	{{range .Fields -}}
+      {{if .IsUnique -}}
+		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // this form just pass a parameter 
+      {{end -}}
+	{{- end -}}
+}
 // Get{{$StructName}}One get {{$StructName}} 
-func Get{{$StructName}}One(in string)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+func Get{{$StructName}}One(req *Operating{{$StructName}}OneReqForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	var(
-		id int64
-	)
-	if 	id,err = strconv.ParseInt(in, 10, 64);err!=nil{return}
-	var(
-		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID({{$IDType}}(id))
-	)
-	if err = d.GetByID();err!=nil{return}
+		d  *model_{{$Package}}.{{$StructName}}
+		)
+	{{range .Fields -}}
+      {{if .IsUnique -}}
+		if req.{{.FieldName}}!=nil{
+			d = model_{{$Package}}.New{{$StructName}}()
+			if err = d.SetQueryBy{{.FieldName}}(*req.{{.FieldName}}).GetBy{{.FieldName}}();err!=nil{
+				return
+			}
+			goto RETURN
+		} 
+      {{end -}}
+	{{- end -}}
 
+RETURN:
 	ret = d
 	return   
 }
 
 // Delete{{$StructName}}One delete {{$StructName}} 
-func Delete{{$StructName}}One(in string)( err error) {
+func Delete{{$StructName}}One(req *Operating{{$StructName}}OneReqForm)( err error) {
 	var(
-		id int64
-	)
-	if 	id,err = strconv.ParseInt(in, 10, 64);err!=nil{return}
-	var(
-		d = model_{{$Package}}.New{{$StructName}}().SetQueryByID({{$IDType}}(id))
-	)
-	// if needed todo add you business logic code
-	return   d.DeleteByID()
+		d  *model_{{$Package}}.{{$StructName}}
+		)
+	{{range .Fields -}}
+      {{if .IsUnique -}}
+		if req.{{.FieldName}}!=nil{
+			d = model_{{$Package}}.New{{$StructName}}()
+			return d.SetQueryBy{{.FieldName}}(*req.{{.FieldName}}).DeleteBy{{.FieldName}}()
+		} 
+      {{end -}}
+	{{- end -}}
+	return
 }
 
 // Delete{{$StructName}}Batch delete {{$StructName}} 
@@ -155,5 +168,5 @@ func Delete{{$StructName}}Batch(ids []string)( err error) {
 	return   model_{{$Package}}.Delete{{$StructName}}Batch(ids)
 }
 
-`, "`", "`", "`", "`", "`", "`")
+`, "`", "`", "`", "`", "`", "`", "`", "`")
 )

@@ -98,7 +98,6 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 // @router /api/v1/{{$Package}}/edit [put]
 func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 	var(
-		data interface{}
 		req = new(srv_{{$Package}}.Edit{{$StructName}}ReqForm)
 		err error
 		code = response.CodeFail	
@@ -107,13 +106,13 @@ func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 		if err!=nil{
 			response.NewGinResponse(c).Fail(code,err.Error()).Response()
 		}else{
-			response.NewGinResponse(c).Success(data).Response()
+			response.NewGinResponse(c).Success(nil).Response()
 		}
 	}()
 	if err = c.ShouldBind(&req);err!=nil{
 		return
 	}
-	if data,err = srv_{{$Package}}.Edit{{.StructName}}One(req);err!=nil{
+	if err = srv_{{$Package}}.Edit{{.StructName}}One(req);err!=nil{
 		return
 	}
 }
@@ -124,14 +123,14 @@ func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 // @Description get {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param id query string true "{{$StructName}} ID"
+// @Param {} query srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Package}}/get  [get]
 func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 	var(
 		data interface{}
-		id string
+		req =new(srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
 		err error
 		code = response.CodeFail	
 )
@@ -142,8 +141,10 @@ func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	id = c.Query("id")
-	if data,err = srv_{{$Package}}.Get{{$StructName}}One(id);err!=nil{
+	if err =  c.ShouldBindQuery(req);err!=nil{
+		return
+	}
+	if data,err = srv_{{$Package}}.Get{{$StructName}}One(req);err!=nil{
 		return
 	}
 }
@@ -184,7 +185,7 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 // @Description delete {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param id body string true "{{$StructName}} ID"
+// @Param {} body srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Package}}/delete [delete]
@@ -192,7 +193,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 	var(
 		data interface{}
 		err error
-		id string
+		req = new(srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
 		code = response.CodeFail	
 )
 	defer func(){
@@ -202,8 +203,8 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	if err = c.ShouldBind(&id);err!=nil{return}
-	if err = srv_{{$Package}}.Delete{{$StructName}}One(id);err!=nil{return}
+	if err = c.ShouldBind(req);err!=nil{return}
+	if err = srv_{{$Package}}.Delete{{$StructName}}One(req);err!=nil{return}
 }
 
 // DeleteList delete {{$StructName}} list record

@@ -20,6 +20,7 @@ type Field struct {
 	Type        string // field type
 	IsBaseModel bool   // base model field
 	IsUnique    bool   // is unique true
+	IsPrimary   bool   // is primary kry
 }
 
 // StructData struct data
@@ -124,6 +125,9 @@ func (p *Parser) ParserStruct() (err error) {
 						if fd.Tag != nil && (strings.Contains(fd.Tag.Value, "primary") ||
 							strings.Contains(fd.Tag.Value, "unique")) {
 							fieldData.IsUnique = true
+							if strings.Contains(fd.Tag.Value, "primary") {
+								fieldData.IsPrimary = true
+							}
 							if strings.Contains(fd.Tag.Value, "primary") || strings.HasSuffix(fieldData.DBName,
 								"id") {
 								fieldData.IsBaseModel = true
@@ -141,6 +145,7 @@ func (p *Parser) ParserStruct() (err error) {
 							idField.Type = "uint"
 							idField.IsUnique = true
 							idField.IsBaseModel = true
+							idField.IsPrimary = true
 							idField.HumpName = "id"
 							idField.DBName = gorm.ToDBName("ID")
 

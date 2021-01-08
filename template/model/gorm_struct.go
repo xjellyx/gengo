@@ -55,9 +55,9 @@ func TableName()string{
 		return
 	}
 
-	// Updates update record
-	func (t *{{.StructName}}) Updates( m map[string]interface{},dbs ...*gorm.DB)(err error) {
-		if err = model_common.GetDB(dbs...).Model(t).Updates(m).Error;err!=nil{
+	// Update update record
+	func (t *{{.StructName}}) Update(dbs ...*gorm.DB)(err error) {
+		if err = model_common.GetDB(dbs...).Updates(t).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err)
 			err = ErrUpdate{{.StructName}} {{end}}
 			return
