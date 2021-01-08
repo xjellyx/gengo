@@ -8,18 +8,11 @@ var (
 import(
 "github.com/olongfen/contrib/log"
 "{{$Mod}}/app/setting"
-"gorm.io/gorm"
 )
-
-type FieldData struct {
-	Value interface{} %sjson:"value" form:"value"%s
-	Symbol string %sjson:"symbol" form:"symbol"%s
-}
 
 
 var(
 	ServiceLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "service", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
-	DB *gorm.DB
 )
-`, "`", "`", "`", "`")
+`)
 )
