@@ -124,7 +124,8 @@ func (p *Parser) ParserStruct() (err error) {
 						if fd.Tag != nil && (strings.Contains(fd.Tag.Value, "primary") ||
 							strings.Contains(fd.Tag.Value, "unique")) {
 							fieldData.IsUnique = true
-							if strings.Contains(fd.Tag.Value, "primary") || strings.Contains(fieldData.DBName, "id") {
+							if strings.Contains(fd.Tag.Value, "primary") || strings.HasSuffix(fieldData.DBName,
+								"id") {
 								fieldData.IsBaseModel = true
 							}
 						}

@@ -602,7 +602,7 @@ func (g *Generator) flushController() (err error) {
 			}
 		}
 		filename := dir + "/gen_" + s + ".go"
-		if utils.Exists(filename) && k != initRouter {
+		if utils.Exists(filename) {
 			continue
 		}
 
