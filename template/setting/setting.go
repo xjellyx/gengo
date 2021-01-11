@@ -113,7 +113,7 @@ filepath:
   logpatent: _%Y-%m-%d.log_project
 serve:
   serveraddr: 0.0.0.0
-  serverport: "8003"
+  serverport: "8080"
 project:
 
 `
