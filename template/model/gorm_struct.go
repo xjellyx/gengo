@@ -36,8 +36,8 @@ func TableName()string{
 	return "{{.LowerName}}s"
 }
 	// Add add one record
-	func (t *{{.StructName}}) Add(dbs ...*gorm.DB)(err error) {
-		if err = model_common.GetDB(dbs...).Create(t).Error;err!=nil{
+	func (obj *{{.StructName}}) Add(dbs ...*gorm.DB)(err error) {
+		if err = model_common.GetDB(dbs...).Create(obj).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 			err = ErrCreate{{.StructName}}{{end}}
 			return
@@ -46,8 +46,8 @@ func TableName()string{
 	}
 
 	// Delete delete record
-	func (t *{{.StructName}}) Delete(dbs ...*gorm.DB)(err error) {
-		if err =  model_common.GetDB(dbs...).Delete(t).Error;err!=nil{
+	func (obj *{{.StructName}}) Delete(dbs ...*gorm.DB)(err error) {
+		if err =  model_common.GetDB(dbs...).Delete(obj).Error;err!=nil{
 		
 			{{- if $TFErr}} err = ErrDelete{{.StructName}} {{end}}
 			return
@@ -56,8 +56,8 @@ func TableName()string{
 	}
 
 	// Update update record
-	func (t *{{.StructName}}) Update(dbs ...*gorm.DB)(err error) {
-		if err = model_common.GetDB(dbs...).Updates(t).Error;err!=nil{
+	func (obj *{{.StructName}}) Update(dbs ...*gorm.DB)(err error) {
+		if err = model_common.GetDB(dbs...).Updates(obj).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err)
 			err = ErrUpdate{{.StructName}} {{end}}
 			return
@@ -209,14 +209,14 @@ func TableName()string{
 	{{- range .Fields}}
 		{{- if .IsUnique}}
 			// QueryBy{{.FieldName}} query cond by {{.FieldName}}
-		func (t *{{$StructName}}) SetQueryBy{{.FieldName}}({{.HumpName}} {{.Type}})*{{$StructName}} {
-			t.{{.FieldName}} = {{.HumpName}}
-			return  t
+		func (obj *{{$StructName}}) SetQueryBy{{.FieldName}}({{.HumpName}} {{.Type}})*{{$StructName}} {
+			obj. {{.FieldName}} = {{.HumpName}}
+			return  obj
 		}
 
 		// GetBy{{.FieldName}} get one record by {{.FieldName}}
-		func (t *{{$StructName}})GetBy{{.FieldName}}(dbs ...*gorm.DB)(err error){
-			if err = model_common.GetDB(dbs...).First(t,{{ if not .IsBaseModel }}"{{.DBName}} = ?",t.{{.FieldName}} {{end}}).Error;err!=nil{
+		func (obj *{{$StructName}})GetBy{{.FieldName}}(dbs ...*gorm.DB)(err error){
+			if err = model_common.GetDB(dbs...).First(obj,{{ if not .IsBaseModel }}"{{.DBName}} = ?",obj. {{.FieldName}} {{end}}).Error;err!=nil{
 				{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 				err = ErrGet{{$StructName}} {{end}}
 				return
@@ -225,8 +225,8 @@ func TableName()string{
 		}
 
 		// DeleteBy{{.FieldName}} delete record by {{.FieldName}}
-		func (t *{{$StructName}}) DeleteBy{{.FieldName}}(dbs ...*gorm.DB)(err error) {
-			if err= model_common.GetDB(dbs...).Delete(t,{{ if not .IsBaseModel }}"{{.DBName}} = ?",t.{{.FieldName}}{{end}}).Error;err!=nil{
+		func (obj *{{$StructName}}) DeleteBy{{.FieldName}}(dbs ...*gorm.DB)(err error) {
+			if err= model_common.GetDB(dbs...).Delete(obj,{{ if not .IsBaseModel }}"{{.DBName}} = ?",obj. {{.FieldName}}{{end}}).Error;err!=nil{
 				{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 				err = ErrDelete{{$StructName}} {{end}}
 				return
