@@ -102,8 +102,8 @@ func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(err error) {
 	return
 }
 
-// Get{{$StructName}}Page get page {{$StructName}} data
-func Get{{$StructName}}Page(req *model_{{$Package}}.Query{{$StructName}}Form)(ret []*model_{{$Package}}.{{$StructName}}, err error) {
+// Get{{$StructName}}List get list {{$StructName}} data
+func Get{{$StructName}}List(req *model_{{$Package}}.Query{{$StructName}}Form)(ret []*model_{{$Package}}.{{$StructName}}, err error) {
 	var(
 		datas []*model_{{$Package}}.{{$StructName}}
 	)

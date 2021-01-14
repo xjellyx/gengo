@@ -176,7 +176,7 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 	if err = c.ShouldBindQuery(req);err!=nil{
 		return
 	}
-	if data,err = srv_{{$Package}}.Get{{$StructName}}Page(req);err!=nil{return}
+	if data,err = srv_{{$Package}}.Get{{$StructName}}List(req);err!=nil{return}
 }
 
 // DeleteOne delete {{$StructName}} one record
