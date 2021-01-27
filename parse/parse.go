@@ -1,6 +1,8 @@
 package parse
 
 import (
+	"fmt"
+	"github.com/olongfen/contrib/log"
 	"github.com/olongfen/gengo/utils"
 	"go/ast"
 	"go/parser"
@@ -103,6 +105,10 @@ func (p *Parser) ParserStruct() (err error) {
 
 				}
 				data.StructDetail = string(p.CacheFileByte[k][structType.Pos()-1 : structType.End()-1])
+				if !strings.Contains(strings.ToLower(data.StructDetail), "primarykey") {
+					err = fmt.Errorf("%s %s", "please set the primary key of the table ", data.StructName)
+					log.Fatal(err)
+				}
 				for _, fd := range structType.Fields.List {
 					var (
 						fieldData = new(Field)
