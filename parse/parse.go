@@ -90,7 +90,8 @@ func (p *Parser) ParserStruct() (err error) {
 					continue
 				}
 				var (
-					data = new(StructData)
+					data      = new(StructData)
+					haveModel = false
 				)
 				data.StructName = ts.Name.Name
 				data.LowerName = gorm.ToDBName(data.StructName)
@@ -105,10 +106,6 @@ func (p *Parser) ParserStruct() (err error) {
 
 				}
 				data.StructDetail = string(p.CacheFileByte[k][structType.Pos()-1 : structType.End()-1])
-				if !strings.Contains(strings.ToLower(data.StructDetail), "primarykey") {
-					err = fmt.Errorf("%s %s", "please set the primary key of the table ", data.StructName)
-					log.Fatal(err)
-				}
 				for _, fd := range structType.Fields.List {
 					var (
 						fieldData = new(Field)
@@ -133,6 +130,7 @@ func (p *Parser) ParserStruct() (err error) {
 							fieldData.IsUnique = true
 							if strings.Contains(fd.Tag.Value, "primary") {
 								fieldData.IsPrimary = true
+								haveModel = true
 							}
 							if strings.Contains(fd.Tag.Value, "primary") || strings.HasSuffix(fieldData.DBName,
 								"id") {
@@ -146,6 +144,7 @@ func (p *Parser) ParserStruct() (err error) {
 					// 基本model字段,自动添加,为后面搜索使用
 					if _v, ok2 := fd.Type.(*ast.SelectorExpr); ok2 {
 						if _v.Sel.Name == "Model" {
+							haveModel = true
 							idField := new(Field)
 							idField.FieldName = "ID"
 							idField.Type = "uint"
@@ -187,8 +186,11 @@ func (p *Parser) ParserStruct() (err error) {
 
 					}
 				}
+				if !haveModel {
+					err = fmt.Errorf("%s %s", "please set the primary key of the table ", data.StructName)
+					log.Fatal(err)
+				}
 				p.Structs = append(p.Structs, data)
-
 			}
 			return true
 		})
