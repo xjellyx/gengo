@@ -6,6 +6,7 @@ import (
 
 var GinTemplate = fmt.Sprintf(`package api_{{.Package}}
 {{- $Package := .Package }}
+{{- $Router :=.HumpName}}
 import(
 	"github.com/gin-gonic/gin"
 	"{{.Mod}}/app/service/{{$Package}}"
@@ -27,7 +28,7 @@ type Ctrl{{$StructName}} struct {}
 // @Param {} body srv_{{$Package}}.Add{{$StructName}}ReqForm true "添加{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Package}}/add [post]
+// @router /api/v1/{{$Router}}/add [post]
 func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 	var(
 		req = &srv_{{$Package}}.Add{{$StructName}}ReqForm{}
@@ -62,7 +63,7 @@ func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 // @Param  {} body srv_{{$Package}}.{{$StructName}}BatchForm true "添加{{$StructName}}表单列表" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Package}}/addList [post]
+// @router /api/v1/{{$Router}}/addList [post]
 func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 	var(
 	data interface{}
@@ -95,7 +96,7 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 // @Param  {} body srv_{{$Package}}.Edit{{$StructName}}ReqForm true "编辑{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Package}}/edit [put]
+// @router /api/v1/{{$Router}}/edit [put]
 func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 	var(
 		req = new(srv_{{$Package}}.Edit{{$StructName}}ReqForm)
@@ -126,7 +127,7 @@ func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 // @Param {} query srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Package}}/get  [get]
+// @router /api/v1/{{$Router}}/get  [get]
 func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 	var(
 		data interface{}
@@ -158,7 +159,7 @@ func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 // @Param {} query model_{{$Package}}.Query{{$StructName}}Form true "获取{{$StructName}}列表form"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Package}}/list  [get]
+// @router /api/v1/{{$Router}}/list  [get]
 func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 	var(
 		data interface{}
@@ -188,7 +189,7 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 // @Param {} body srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router  /api/v1/{{$Package}}/delete [delete]
+// @router  /api/v1/{{$Router}}/delete [delete]
 func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 	var(
 		data interface{}
@@ -216,7 +217,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 // @Param ids body []string true "{{$StructName}} ID list"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router  /api/v1/{{$Package}}/deleteList [delete]
+// @router  /api/v1/{{$Router}}/deleteList [delete]
 func (ct *Ctrl{{$StructName}}) DeleteList(c *gin.Context) {
 	var(
 		data interface{}
@@ -496,14 +497,14 @@ import  ("{{.Mod}}/app/controller/api/{{.Package}}"
 
 func init{{.StructName}}(r *gin.RouterGroup) {
 	c := &api_{{.Package}}.Ctrl{{.StructName}}{}
-	{{.Package}} := r.Group("{{.Package}}")
-	{{.Package}}.GET("get", c.GetOne)
-	{{.Package}}.GET("list", c.GetList)
-	{{.Package}}.POST("add", c.AddOne)
-	{{.Package}}.POST("addList", c.AddList)
-	{{.Package}}.PUT("edit", c.Edit)
-	{{.Package}}.DELETE("delete", c.DeleteOne)
-	{{.Package}}.DELETE("deleteList", c.DeleteList)
+	{{.HumpName}} := r.Group("{{.HumpName}}")
+	{{.HumpName}}.GET("get", c.GetOne)
+	{{.HumpName}}.GET("list", c.GetList)
+	{{.HumpName}}.POST("add", c.AddOne)
+	{{.HumpName}}.POST("addList", c.AddList)
+	{{.HumpName}}.PUT("edit", c.Edit)
+	{{.HumpName}}.DELETE("delete", c.DeleteOne)
+	{{.HumpName}}.DELETE("deleteList", c.DeleteList)
 }
 
 func init() {
