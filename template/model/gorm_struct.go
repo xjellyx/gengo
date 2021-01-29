@@ -110,27 +110,27 @@ func TableName()string{
 	{{$Float64 :="float64" }}
 	{{$Float32 :="float32" }}
 	{{$Time :="time.Time" }}
-	//  Query{{$StructName}}Form query form
+	//  Query{{$StructName}}Form query form ;  if some field is required, add binding:"required" to tag by self
 	type Query{{$StructName}}Form struct{
 {{- range .Fields}}{{- if not .IsUnique}}		
 {{- if eq .Type $Time -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
 {{- else if eq .Type $Int -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
 {{- else if eq .Type $Int8 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
-{{- else if eq .Type $Int16 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
-{{- else if eq .Type $Int32 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
-{{- else if eq .Type $Int64 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
-{{- else if eq .Type $Float32 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
-{{- else if eq .Type $Float64 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
+{{- else if eq .Type $Int16 -}}cond 
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
+{{- else if eq .Type $Int32 -}}cond 
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
+{{- else if eq .Type $Int64 -}}cond 
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
+{{- else if eq .Type $Float32 -}}cond 
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
+{{- else if eq .Type $Float64 -}}cond 
+		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
 {{- else -}}
-		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // if required, add binding:"required" to tag by self
+		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
 {{- end}}	
 {{- end}}
 {{end}}
