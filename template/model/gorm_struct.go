@@ -135,8 +135,8 @@ func TableName()string{
 {{- end}}
 {{end}}
 		Order []string %sjson:"order" form:"order"%s
-		PageNum int %sjson:"pageNum" form:"pageNum" binding:"required"%s
-		PageSize int %sjson:"pageSize" form:"pageSize" binding:"required" %s
+		PageNum int %sjson:"pageNum" form:"pageNum"%s // get all without uploading
+		PageSize int %sjson:"pageSize" form:"pageSize"%s // get all without uploading
 		}
 	
 	// Get{{$StructName}}List get {{$StructName}} list some field value or some condition
