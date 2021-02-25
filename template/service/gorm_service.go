@@ -3,7 +3,7 @@ package service
 import "fmt"
 
 var (
-	GORMServiceTemplate = fmt.Sprintf(`package srv_{{.Package}}
+	GORMServiceTemplate = fmt.Sprintf(`package svc_{{.Package}}
 {{- $Package := .Package }}
 import(
 	"{{.Mod}}/app/model/{{$Package}}"
@@ -16,7 +16,11 @@ import(
 type Add{{$StructName}}ReqForm struct {
 	{{- range .Fields -}}
 	  {{if not .IsBaseModel -}} 
-		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // if required, add binding:"required" to tag by self
+		{{if .IsUnique -}}
+			{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s // {{.HumpName}}
+		{{else}}
+			{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // {{.HumpName}}
+        {{end -}}
 	  {{end -}}
 	{{end -}}
 }
@@ -26,7 +30,7 @@ func (a *Add{{$StructName}}ReqForm) Valid() (err error) {
 }
 
 {{$PrimaryKey:=""}}
-// Edit{{$StructName}}ReqForm
+// Edit{{$StructName}}ReqForm 
 type Edit{{$StructName}}ReqForm struct {
 	{{range .Fields -}}
       {{if .IsPrimary -}}
@@ -35,7 +39,7 @@ type Edit{{$StructName}}ReqForm struct {
 		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s 
       {{end -}}
 	  {{if not .IsBaseModel -}}
-		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // if required, add binding:"required" to tag by self
+		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // {{.HumpName}}
 	  {{end -}}
 	{{- end -}}
 }
@@ -168,5 +172,5 @@ func Delete{{$StructName}}Batch(ids []string)( err error) {
 	return   model_{{$Package}}.Delete{{$StructName}}Batch(ids)
 }
 
-`, "`", "`", "`", "`", "`", "`", "`", "`")
+`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
 )

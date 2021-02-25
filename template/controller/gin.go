@@ -25,13 +25,13 @@ type Ctrl{{$StructName}} struct {}
 // @Description add {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body srv_{{$Package}}.Add{{$StructName}}ReqForm true "添加{{$StructName}}表单" 
+// @Param {} body svc_{{$Package}}.Add{{$StructName}}ReqForm true "添加{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/add [post]
 func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 	var(
-		req = &srv_{{$Package}}.Add{{$StructName}}ReqForm{}
+		req = &svc_{{$Package}}.Add{{$StructName}}ReqForm{}
 		data interface{}
 		code = response.CodeFail
 		err error
@@ -48,7 +48,7 @@ func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 	if err = c.ShouldBind(req);err!=nil{
 		return
 	}
-	if data, err = srv_{{$Package}}.Add{{$StructName}}One(req); err != nil {
+	if data, err = svc_{{$Package}}.Add{{$StructName}}One(req); err != nil {
 		return
 	}
 	
@@ -60,7 +60,7 @@ func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 // @Description add {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param  {} body srv_{{$Package}}.{{$StructName}}BatchForm true "添加{{$StructName}}表单列表" 
+// @Param  {} body svc_{{$Package}}.{{$StructName}}BatchForm true "添加{{$StructName}}表单列表" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/addList [post]
@@ -68,7 +68,7 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 	var(
 	data interface{}
 	code = response.CodeFail
-	req srv_{{$Package}}.{{$StructName}}BatchForm
+	req svc_{{$Package}}.{{$StructName}}BatchForm
 	err error)
 	defer func(){
 		if err!=nil{
@@ -82,7 +82,7 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 		return
 	}
 	
-	if data,err = srv_{{$Package}}.Add{{$StructName}}Batch(req);err!=nil{
+	if data,err = svc_{{$Package}}.Add{{$StructName}}Batch(req);err!=nil{
 		return
 	}
 }
@@ -93,13 +93,13 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 // @Description edit {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param  {} body srv_{{$Package}}.Edit{{$StructName}}ReqForm true "编辑{{$StructName}}表单" 
+// @Param  {} body svc_{{$Package}}.Edit{{$StructName}}ReqForm true "编辑{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/edit [put]
 func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 	var(
-		req = new(srv_{{$Package}}.Edit{{$StructName}}ReqForm)
+		req = new(svc_{{$Package}}.Edit{{$StructName}}ReqForm)
 		err error
 		code = response.CodeFail	
 )
@@ -113,7 +113,7 @@ func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 	if err = c.ShouldBind(&req);err!=nil{
 		return
 	}
-	if err = srv_{{$Package}}.Edit{{.StructName}}One(req);err!=nil{
+	if err = svc_{{$Package}}.Edit{{.StructName}}One(req);err!=nil{
 		return
 	}
 }
@@ -124,14 +124,14 @@ func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 // @Description get {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} query srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
+// @Param {} query svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/get  [get]
 func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 	var(
 		data interface{}
-		req =new(srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
+		req =new(svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
 		err error
 		code = response.CodeFail	
 )
@@ -145,7 +145,7 @@ func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 	if err =  c.ShouldBindQuery(req);err!=nil{
 		return
 	}
-	if data,err = srv_{{$Package}}.Get{{$StructName}}One(req);err!=nil{
+	if data,err = svc_{{$Package}}.Get{{$StructName}}One(req);err!=nil{
 		return
 	}
 }
@@ -177,7 +177,7 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 	if err = c.ShouldBindQuery(req);err!=nil{
 		return
 	}
-	if data,err = srv_{{$Package}}.Get{{$StructName}}List(req);err!=nil{return}
+	if data,err = svc_{{$Package}}.Get{{$StructName}}List(req);err!=nil{return}
 }
 
 // DeleteOne delete {{$StructName}} one record
@@ -186,7 +186,7 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 // @Description delete {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
+// @Param {} body svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Router}}/delete [delete]
@@ -194,7 +194,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 	var(
 		data interface{}
 		err error
-		req = new(srv_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
+		req = new(svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
 		code = response.CodeFail	
 )
 	defer func(){
@@ -205,7 +205,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 		}
 	}()
 	if err = c.ShouldBind(req);err!=nil{return}
-	if err = srv_{{$Package}}.Delete{{$StructName}}One(req);err!=nil{return}
+	if err = svc_{{$Package}}.Delete{{$StructName}}One(req);err!=nil{return}
 }
 
 // DeleteList delete {{$StructName}} list record
@@ -233,7 +233,7 @@ func (ct *Ctrl{{$StructName}}) DeleteList(c *gin.Context) {
 		}
 	}()
 	if err = c.ShouldBind(&ids);err!=nil{return}
-	if err = srv_{{$Package}}.Delete{{$StructName}}Batch(ids);err!=nil{return}
+	if err = svc_{{$Package}}.Delete{{$StructName}}Batch(ids);err!=nil{return}
 }
 
 `)

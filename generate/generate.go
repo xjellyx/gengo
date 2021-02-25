@@ -476,7 +476,7 @@ func (g *Generator) flushModel() (err error) {
 				return
 			}
 		}
-		filename := dir + "/gen_" + s + ".go"
+		filename := dir + "/model_" + s + ".go"
 		if utils.Exists(filename) && k != initDB {
 			continue
 		}
@@ -497,7 +497,7 @@ func (g *Generator) flushService() (err error) {
 				return
 			}
 		}
-		filename := dir + "/gen_" + s + ".go"
+		filename := dir + "/svc_" + s + ".go"
 		if utils.Exists(filename) {
 			continue
 		}
@@ -515,7 +515,7 @@ func (g *Generator) flushSetting() (err error) {
 		switch k {
 		case settingName:
 			dir := g.outputDir + "/app/setting"
-			filename := dir + "/gen_setting.go"
+			filename := dir + "/setting.go"
 			if err = os.MkdirAll(dir, 0777); err != nil {
 				if !os.IsExist(err) {
 					return
@@ -566,13 +566,16 @@ func (g *Generator) flushController() (err error) {
 	for k, _ := range g.controlBuf {
 		s := gorm.ToDBName(k)
 		var (
-			dir string
+			dir    string
+			prefix string
 		)
 		switch k {
 		case common, response, middleware:
 			dir = g.outputDir + "/app/controller/" + s
+			prefix = "/"
 		default:
 			dir = g.outputDir + "/app/controller/api/" + s
+			prefix = "/api_"
 		}
 
 		if err = os.MkdirAll(dir, 0777); err != nil {
@@ -580,7 +583,9 @@ func (g *Generator) flushController() (err error) {
 				return
 			}
 		}
-		filename := dir + "/gen_" + s + ".go"
+
+		filename := dir + prefix + s + ".go"
+		log.Println(filename)
 		if utils.Exists(filename) {
 			continue
 		}
@@ -601,7 +606,7 @@ func (g *Generator) flushController() (err error) {
 				return
 			}
 		}
-		filename := dir + "/gen_" + s + ".go"
+		filename := dir + "/route_" + s + ".go"
 		if utils.Exists(filename) {
 			continue
 		}
