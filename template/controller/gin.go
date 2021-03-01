@@ -277,6 +277,11 @@ func (m Meta) Set(key string, val interface{}) {
 	l.Unlock()
 }
 
+func (g *Gin) NewMeta(m Meta) *Gin {
+	g.resp.Meta = m
+	return g
+}
+
 // NewGinResponse
 func NewGinResponse(c *gin.Context) *Gin {
 	return &Gin{
