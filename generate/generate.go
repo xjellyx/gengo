@@ -152,11 +152,19 @@ func (g *Generator) genModel() (err error) {
 		if _, ok := g.modelBuf[v.StructName]; !ok {
 			continue
 		}
+		g.modelBuf[v.StructName+"_form"] = new(bytes.Buffer)
+		if t, err = template.New(v.StructName + "_form").Parse(model.GORMForm); err != nil {
+			return
+		}
+		if err = t.Execute(g.modelBuf[v.StructName+"_form"], v); err != nil {
+			return
+		}
 		switch g.config.ORM {
 		case "gorm":
 			if t, err = template.New(v.StructName).Parse(model.GORMTemplate); err != nil {
 				return
 			}
+
 			if err = t.Execute(g.modelBuf[v.StructName], v); err != nil {
 				return
 			}
@@ -225,7 +233,7 @@ func (g *Generator) genService() (err error) {
 	}
 	c := parse.Config{}
 	c = g.config
-	c.Package = "srv_common"
+	c.Package = "svc_common"
 	if err = temp.Execute(g.serviceBuf[common], c); err != nil {
 		return
 	}
@@ -264,7 +272,7 @@ func (g *Generator) genControl() (err error) {
 	}
 	c := parse.Config{}
 	c = g.config
-	c.Package = "ctrl_common"
+	c.Package = "ctl_common"
 	if err = temp.Execute(g.controlBuf[common], c); err != nil {
 		return
 	}
@@ -470,7 +478,12 @@ func (g *Generator) Format() *Generator {
 func (g *Generator) flushModel() (err error) {
 	for k, _ := range g.modelBuf {
 		s := gorm.ToDBName(k)
-		dir := g.outputDir + "/app/model/" + s
+		dir := g.outputDir + "/app/model/"
+		if strings.HasSuffix(s, "_form") {
+			dir += strings.TrimSuffix(s, "_form")
+		} else {
+			dir += s
+		}
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
 				return

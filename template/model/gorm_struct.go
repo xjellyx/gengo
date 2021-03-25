@@ -10,25 +10,25 @@ import (
 	"{{.Mod}}/app/model/common"
 	"gorm.io/gorm"
 )
-
+{{$StructName :=.StructName}}
 // Error
 {{if $TFErr}} var(
-	ErrCreate{{.StructName}} = errors.New("create {{.StructName}} failed")
-	ErrDelete{{.StructName}} = errors.New("delete {{.StructName}} failed")
-	ErrGet{{.StructName}} = errors.New("get {{.StructName}} failed")
-	ErrUpdate{{.StructName}} = errors.New("update {{.StructName}} failed")
+	ErrCreate{{$StructName}} = errors.New("create {{$StructName}} failed")
+	ErrDelete{{$StructName}} = errors.New("delete {{$StructName}} failed")
+	ErrGet{{$StructName}} = errors.New("get {{$StructName}} failed")
+	ErrUpdate{{$StructName}} = errors.New("update {{$StructName}} failed")
 )
 {{end}}
-// {{.StructName}}
-type {{.StructName}} {{.StructDetail}}
+// {{$StructName}}
+type {{$StructName}} {{.StructDetail}}
 
 func init(){
-	model_common.Tables = append(model_common.Tables,&{{.StructName}}{})
+	model_common.Tables = append(model_common.Tables,&{{$StructName}}{})
 }
 
-// New{{.StructName}} new
-func New{{.StructName}}()*{{.StructName}}{
-	return new({{.StructName}})
+// New{{$StructName}} new
+func New{{$StructName}}()*{{$StructName}}{
+	return new({{$StructName}})
 }
 
 // TableName 
@@ -36,72 +36,71 @@ func TableName()string{
 	return "{{.LowerName}}s"
 }
 	// Add add one record
-	func (obj *{{.StructName}}) Add(dbs ...*gorm.DB)(err error) {
+	func (obj *{{$StructName}}) Add(dbs ...*gorm.DB)(err error) {
 		if err = model_common.GetDB(dbs...).Create(obj).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
-			err = ErrCreate{{.StructName}}{{end}}
+			err = ErrCreate{{$StructName}}{{end}}
 			return
 		}
 		return
 	}
 
 	// Delete delete record
-	func (obj *{{.StructName}}) Delete(dbs ...*gorm.DB)(err error) {
+	func (obj *{{$StructName}}) Delete(dbs ...*gorm.DB)(err error) {
 		if err =  model_common.GetDB(dbs...).Delete(obj).Error;err!=nil{
 		
-			{{- if $TFErr}} err = ErrDelete{{.StructName}} {{end}}
+			{{- if $TFErr}} err = ErrDelete{{$StructName}} {{end}}
 			return
 		}
 		return
 	}
 
 	// Update update record
-	func (obj *{{.StructName}}) Update(dbs ...*gorm.DB)(err error) {
+	func (obj *{{$StructName}}) Update(dbs ...*gorm.DB)(err error) {
 		if err = model_common.GetDB(dbs...).Updates(obj).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err)
-			err = ErrUpdate{{.StructName}} {{end}}
+			err = ErrUpdate{{$StructName}} {{end}}
 			return
 		}
 		return
 	}
 
-	// Get{{.StructName}}All get all record
-	func Get{{.StructName}}All(dbs ...*gorm.DB)(ret []*{{.StructName}},err error){
+	// GetAll get all record
+	func GetAll(dbs ...*gorm.DB)(ret []*{{$StructName}},err error){
 		if err = model_common.GetDB(dbs...).Find(&ret).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
-			err = ErrGet{{.StructName}} {{end}}
+			err = ErrGet{{$StructName}} {{end}}
 			return
 		}
 		return
 	}
 
-	// Get{{.StructName}}Count get count
-	func Get{{.StructName}}Count(dbs ...*gorm.DB)(ret int64){
-		model_common.GetDB(dbs...).Model(&{{.StructName}}{}).Count(&ret)
+	// Count get count
+	func Count(dbs ...*gorm.DB)(ret int64){
+		model_common.GetDB(dbs...).Model(&{{$StructName}}{}).Count(&ret)
 		return
 	}
 
-	// Delete{{.StructName}}Batch delete {{.StructName}} batch
-	func Delete{{.StructName}}Batch( ids []string, dbs ...*gorm.DB)(err error){
-		if err = model_common.GetDB(dbs...).Model(&{{.StructName}}{}).Delete("id in ?",ids).Error;err!=nil{
+	// DeleteBatch delete {{$StructName}} batch
+	func DeleteBatch( ids []string, dbs ...*gorm.DB)(err error){
+		if err = model_common.GetDB(dbs...).Model(&{{$StructName}}{}).Delete("id in ?",ids).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
-			err = ErrDelete{{.StructName}} {{end}}
+			err = ErrDelete{{$StructName}} {{end}}
 			return
 		}
 		return 
 	}
 	
-	// Add{{.StructName}}Batch add {{.StructName}} batch
-	func Add{{.StructName}}Batch( datas []*{{.StructName}},dbs ...*gorm.DB)(err error){
-		if err =  model_common.GetDB(dbs...).Model(&{{.StructName}}{}).Create(datas).Error;err!=nil{
+	// AddBatch add {{$StructName}} batch
+	func AddBatch( datas []*{{$StructName}},dbs ...*gorm.DB)(err error){
+		if err =  model_common.GetDB(dbs...).Model(&{{$StructName}}{}).Create(datas).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
-			err = ErrCreate{{.StructName}} {{end}}
+			err = ErrCreate{{$StructName}} {{end}}
 			return
 		}
 		return
 	}
 
-	{{$StructName := .StructName}}
 	{{$Int :=  "int" }}
 	{{$Int8  :="int8" }}
 	{{$Int16 :="int16" }}
@@ -109,38 +108,9 @@ func TableName()string{
 	{{$Int64 :="int64" }}
 	{{$Float64 :="float64" }}
 	{{$Float32 :="float32" }}
-	{{$Time :="time.Time" }}
-	//  Query{{$StructName}}Form query form ;  if some field is required, add binding:"required" to tag by self
-	type Query{{$StructName}}Form struct{
-{{- range .Fields}}{{- if not .IsUnique}}		
-{{- if eq .Type $Time -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Int -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Int8 -}}
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Int16 -}}cond 
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Int32 -}}cond 
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Int64 -}}cond 
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Float32 -}}cond 
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else if eq .Type $Float64 -}}cond 
-		{{.FieldName}} *model_common.FieldData %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- else -}}
-		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
-{{- end}}	
-{{- end}}
-{{end}}
-		Order []string %sjson:"order" form:"order"%s
-		PageNum int %sjson:"pageNum" form:"pageNum"%s // get all without uploading
-		PageSize int %sjson:"pageSize" form:"pageSize"%s // get all without uploading
-		}
-	
-	// Get{{$StructName}}List get {{$StructName}} list some field value or some condition
-	func Get{{$StructName}}List( q *Query{{$StructName}}Form,dbs ...*gorm.DB)(ret []*{{$StructName}},err error){
+	{{$Time :="time.Time" }}	
+	// GetList get {{$StructName}} list some field value or some condition
+	func GetList( q *QueryForm,dbs ...*gorm.DB)(ret []*{{$StructName}},err error){
 		var(
 			db = model_common.GetDB(dbs...)
 		)
@@ -166,32 +136,32 @@ func TableName()string{
 			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
 		}
 {{- else if eq .Type $Int}}
-		if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else if eq .Type $Int8}}
-		if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+			for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else if eq .Type $Int16}}
-		if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else if eq .Type $Int32}}
-		if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else if eq .Type $Int64}}
-		if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else if eq .Type $Float32}}
-	if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else if eq .Type $Float64}}
-		if q.{{.FieldName}}!=nil{
-			db = db.Where("{{.DBName}}" +q.{{.FieldName}}.Symbol +"?",q.{{.FieldName}}.Value)
+		for _,v:=range q.{{.FieldName}}List{
+				db = db.Where("level"+v.Symbol+"?", v.Value)
 		}
 {{- else -}}
 		if q.{{.FieldName}}!=nil{
@@ -208,8 +178,8 @@ func TableName()string{
 
 	{{- range .Fields}}
 		{{- if .IsUnique}}
-			// QueryBy{{.FieldName}} query cond by {{.FieldName}}
-		func (obj *{{$StructName}}) SetQueryBy{{.FieldName}}({{.HumpName}} {{.Type}})*{{$StructName}} {
+			// Query{{.FieldName}} query cond by {{.FieldName}}
+		func (obj *{{$StructName}}) SetQuery{{.FieldName}}({{.HumpName}} {{.Type}})*{{$StructName}} {
 			obj. {{.FieldName}} = {{.HumpName}}
 			return  obj
 		}
@@ -235,7 +205,7 @@ func TableName()string{
 		}
 		{{- end}}
 	{{end}}
-`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
+`)
 	GORMInitDB = `
 package model
 {{$Mod :=.Mod}}
@@ -304,4 +274,154 @@ func init() {
 	log.Infoln("database init success !")
 }
 `
+	GORMForm = fmt.Sprintf(`package model_{{.Package}}
+import (
+	"{{.Mod}}/app/model/common"
+)
+	{{$StructName := .StructName}}
+	{{$Int :=  "int" }}
+	{{$Int8  :="int8" }}
+	{{$Int16 :="int16" }}
+	{{$Int32 :="int32" }}
+	{{$Int64 :="int64" }}
+	{{$Float64 :="float64" }}
+	{{$Float32 :="float32" }}
+	{{$Time :="time.Time" }}
+	//  QueryForm query {{$StructName}}  form ;  if some field is required, add binding:"required" to tag by self
+	type QueryForm struct{
+{{- range .Fields}}{{- if not .IsUnique}}		
+{{- if eq .Type $Time -}}
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Int -}}
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Int8 -}}
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Int16 -}} 
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Int32 -}} 
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Int64 -}} 
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Float32 -}} 
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else if eq .Type $Float64 -}} 
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+{{- else -}}
+		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
+{{- end}}	
+{{- end}}
+{{end}}
+		Order []string %sjson:"order" form:"order"%s
+		PageNum int %sjson:"pageNum" form:"pageNum"%s // get all without uploading
+		PageSize int %sjson:"pageSize" form:"pageSize"%s // get all without uploading
+		}
+
+func (q *QueryForm) Valid() (err error) {
+{{- range .Fields}}{{- if not .IsUnique}}		
+{{- if eq .Type $Time -}}
+			for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Int -}}
+			for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Int8 -}}
+			for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Int16 -}} 
+			for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Int32 -}}
+			for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Int64 -}} 
+	for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Float32 -}} 
+	for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- else if eq .Type $Float64 -}} 
+		for _, v := range q.{{.FieldName}}List {
+		if err = v.Valid(); err != nil {
+			return
+		}
+	}
+{{- end}}	
+{{- end}}
+{{end}}
+	return
+}
+
+// AddForm add {{$StructName}} form
+type AddForm struct {
+	{{- range .Fields -}}
+	  {{if not .IsBaseModel -}} 
+		{{if .IsUnique -}}
+			{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s // {{.HumpName}}
+		{{else}}
+			{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // {{.HumpName}}
+        {{end -}}
+	  {{end -}}
+	{{end -}}
+}
+
+// Valid add {{$StructName}}  form verify
+func (a *AddForm) Valid() (err error) {
+	return
+}
+
+type AddBatchForm []*AddForm
+
+{{$PrimaryKey := ""}}
+{{$PrimaryKeyType := ""}}
+// EditForm  edit {{$StructName}} form 
+type EditForm struct {
+	{{range .Fields -}}
+      {{if .IsPrimary -}}
+		{{$PrimaryKey = .FieldName -}} 
+		{{$PrimaryKeyType = .Type -}}
+		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s 
+      {{end -}}
+	  {{if not .IsBaseModel -}}
+		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // {{.HumpName}}
+	  {{end -}}
+	{{- end -}}
+}
+
+// Valid  edit {{$StructName}} form verify
+func (a *EditForm) Valid() (err error) {
+	return
+}
+
+// Op{{$StructName}}OneForm
+type OpOneForm struct {
+	{{range .Fields -}}
+      {{if .IsUnique -}}
+		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // this form just pass a parameter 
+      {{end -}}
+	{{- end -}}
+}
+
+`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`",
+		"`", "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
 )

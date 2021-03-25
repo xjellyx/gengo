@@ -16,22 +16,22 @@ import(
 
 {{$StructName := .StructName}}
 
-// Ctrl{{$StructName}} 
-type Ctrl{{$StructName}} struct {}
+// Ctl 
+type Ctl struct {}
 
-// AddOne add {{$StructName}} one record
+// Add add {{$StructName}} one record
 // @tags {{$StructName}}
 // @Summary add {{$StructName}} one record
 // @Description add {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body svc_{{$Package}}.Add{{$StructName}}ReqForm true "添加{{$StructName}}表单" 
+// @Param {} body model_{{$Package}}.AddForm true "添加{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/add [post]
-func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
+func (ct *Ctl) Add(c *gin.Context) {
 	var(
-		req = &svc_{{$Package}}.Add{{$StructName}}ReqForm{}
+		req = &model_{{$Package}}.AddForm{}
 		data interface{}
 		code = response.CodeFail
 		err error
@@ -48,7 +48,7 @@ func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 	if err = c.ShouldBind(req);err!=nil{
 		return
 	}
-	if data, err = svc_{{$Package}}.Add{{$StructName}}One(req); err != nil {
+	if data, err = svc_{{$Package}}.Add(req); err != nil {
 		return
 	}
 	
@@ -60,15 +60,15 @@ func (ct *Ctrl{{$StructName}}) AddOne(c *gin.Context) {
 // @Description add {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param  {} body svc_{{$Package}}.{{$StructName}}BatchForm true "添加{{$StructName}}表单列表" 
+// @Param  {} body model_{{$Package}}.AddBatchForm true "添加{{$StructName}}表单列表" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/addList [post]
-func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
+func (ct *Ctl) AddList(c *gin.Context) {
 	var(
 	data interface{}
 	code = response.CodeFail
-	req svc_{{$Package}}.{{$StructName}}BatchForm
+	req model_{{$Package}}.AddBatchForm
 	err error)
 	defer func(){
 		if err!=nil{
@@ -82,7 +82,7 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 		return
 	}
 	
-	if data,err = svc_{{$Package}}.Add{{$StructName}}Batch(req);err!=nil{
+	if data,err = svc_{{$Package}}.AddBatch(req);err!=nil{
 		return
 	}
 }
@@ -93,13 +93,13 @@ func (ct *Ctrl{{$StructName}}) AddList(c *gin.Context) {
 // @Description edit {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param  {} body svc_{{$Package}}.Edit{{$StructName}}ReqForm true "编辑{{$StructName}}表单" 
+// @Param  {} body model_{{$Package}}.EditForm true "编辑{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/edit [put]
-func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
+func (ct *Ctl) Edit(c *gin.Context) {
 	var(
-		req = new(svc_{{$Package}}.Edit{{$StructName}}ReqForm)
+		req = new(model_{{$Package}}.EditForm)
 		err error
 		code = response.CodeFail	
 )
@@ -113,25 +113,25 @@ func (ct *Ctrl{{$StructName}}) Edit(c *gin.Context) {
 	if err = c.ShouldBind(&req);err!=nil{
 		return
 	}
-	if err = svc_{{$Package}}.Edit{{.StructName}}One(req);err!=nil{
+	if err = svc_{{$Package}}.EditOne(req);err!=nil{
 		return
 	}
 }
 
-// GetOne get {{$StructName}} one record
+// Get get {{$StructName}} one record
 // @tags {{$StructName}}
 // @Summary get {{$StructName}} one record
 // @Description get {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} query svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
+// @Param {} query model_{{$Package}}.OpOneForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/get  [get]
-func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
+func (ct *Ctl) Get(c *gin.Context) {
 	var(
 		data interface{}
-		req =new(svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
+		req =new(model_{{$Package}}.OpOneForm)
 		err error
 		code = response.CodeFail	
 )
@@ -145,7 +145,7 @@ func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 	if err =  c.ShouldBindQuery(req);err!=nil{
 		return
 	}
-	if data,err = svc_{{$Package}}.Get{{$StructName}}One(req);err!=nil{
+	if data,err = svc_{{$Package}}.Get(req);err!=nil{
 		return
 	}
 }
@@ -156,14 +156,14 @@ func (ct *Ctrl{{$StructName}}) GetOne(c *gin.Context) {
 // @Description get {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param {} query model_{{$Package}}.Query{{$StructName}}Form true "获取{{$StructName}}列表form"
+// @Param {} body model_{{$Package}}.QueryForm true "获取{{$StructName}}列表form"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Router}}/list  [get]
-func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
+// @router /api/v1/{{$Router}}/list  [post]
+func (ct *Ctl) GetList(c *gin.Context) {
 	var(
 		data interface{}
-		req = new(model_{{$Package}}.Query{{$StructName}}Form)
+		req = new(model_{{$Package}}.QueryForm )
 		err error
 		code = response.CodeFail	
 )
@@ -174,27 +174,27 @@ func (ct *Ctrl{{$StructName}}) GetList(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	if err = c.ShouldBindQuery(req);err!=nil{
+	if err = c.ShouldBind(req);err!=nil{
 		return
 	}
-	if data,err = svc_{{$Package}}.Get{{$StructName}}List(req);err!=nil{return}
+	if data,err = svc_{{$Package}}.GetList(req);err!=nil{return}
 }
 
-// DeleteOne delete {{$StructName}} one record
+// Delete delete {{$StructName}} one record
 // @tags {{$StructName}}
 // @Summary delete {{$StructName}} one record
 // @Description delete {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm true "{{$StructName}} form, just pass a parameter"
+// @Param {} body model_{{$Package}}.OpOneForm true "{{$StructName}} form, just pass a parameter"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Router}}/delete [delete]
-func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
+func (ct *Ctl) Delete(c *gin.Context) {
 	var(
 		data interface{}
 		err error
-		req = new(svc_{{.LowerName}}.Operating{{$StructName}}OneReqForm)
+		req = new(model_{{$Package}}.OpOneForm)
 		code = response.CodeFail	
 )
 	defer func(){
@@ -205,7 +205,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 		}
 	}()
 	if err = c.ShouldBind(req);err!=nil{return}
-	if err = svc_{{$Package}}.Delete{{$StructName}}One(req);err!=nil{return}
+	if err = svc_{{$Package}}.Delete(req);err!=nil{return}
 }
 
 // DeleteList delete {{$StructName}} list record
@@ -218,7 +218,7 @@ func (ct *Ctrl{{$StructName}}) DeleteOne(c *gin.Context) {
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router  /api/v1/{{$Router}}/deleteList [delete]
-func (ct *Ctrl{{$StructName}}) DeleteList(c *gin.Context) {
+func (ct *Ctl) DeleteList(c *gin.Context) {
 	var(
 		data interface{}
 		ids []string
@@ -233,7 +233,7 @@ func (ct *Ctrl{{$StructName}}) DeleteList(c *gin.Context) {
 		}
 	}()
 	if err = c.ShouldBind(&ids);err!=nil{return}
-	if err = svc_{{$Package}}.Delete{{$StructName}}Batch(ids);err!=nil{return}
+	if err = svc_{{$Package}}.DeleteBatch(ids);err!=nil{return}
 }
 
 `)
@@ -385,7 +385,7 @@ func init() {
 		api.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"ping": "pong >>>>>>> update"})
 		})
-		for _,v:=range ctrl_common.RouterGroupFunctions{
+		for _,v:=range ctl_common.RouterGroupFunctions{
 			v(api)
 		}
 
@@ -501,19 +501,19 @@ import  ("{{.Mod}}/app/controller/api/{{.Package}}"
 )
 
 func init{{.StructName}}(r *gin.RouterGroup) {
-	c := &api_{{.Package}}.Ctrl{{.StructName}}{}
+	c := &api_{{.Package}}.Ctl{}
 	{{.HumpName}} := r.Group("{{.HumpName}}")
-	{{.HumpName}}.GET("get", c.GetOne)
-	{{.HumpName}}.GET("list", c.GetList)
-	{{.HumpName}}.POST("add", c.AddOne)
+	{{.HumpName}}.GET("get", c.Get)
+	{{.HumpName}}.POST("list", c.GetList)
+	{{.HumpName}}.POST("add", c.Add)
 	{{.HumpName}}.POST("addList", c.AddList)
 	{{.HumpName}}.PUT("edit", c.Edit)
-	{{.HumpName}}.DELETE("delete", c.DeleteOne)
+	{{.HumpName}}.DELETE("delete", c.Delete)
 	{{.HumpName}}.DELETE("deleteList", c.DeleteList)
 }
 
 func init() {
-ctrl_common.RouterGroupFunctions = append(ctrl_common.RouterGroupFunctions,init{{.StructName}})
+ctl_common.RouterGroupFunctions = append(ctl_common.RouterGroupFunctions,init{{.StructName}})
 }
 
 

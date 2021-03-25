@@ -6,15 +6,25 @@ var (
 	CommonTemplate = fmt.Sprintf(`package {{.Package}}
 
 import(
+"fmt"
 "github.com/olongfen/contrib/log"
 "gorm.io/gorm"
 )
 
 type FieldData struct {
 	Value interface{} %sjson:"value" form:"value"%s
-	Symbol string %sjson:"symbol" form:"symbol"%s
+	Symbol string %sjson:"symbol" form:"symbol"%s // symbol should send: "<", "<=", ">", ">=", "="
 }
 
+func (f *FieldData) Valid() (err error) {
+	switch f.Symbol {
+	case "<", "<=", ">", ">=", "=":
+	default:
+		err = fmt.Errorf("value: %v symbol %s invalid", f.Value, f.Symbol)
+		return
+	}
+	return
+}
 
 var(
 	ModelLog *log.Logger

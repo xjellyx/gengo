@@ -9,47 +9,11 @@ import(
 	"{{.Mod}}/app/model/{{$Package}}"
 	"github.com/mitchellh/mapstructure"
 )
-{{$PrimaryKey := ""}}
-{{$PrimaryKeyType := ""}}
+
 {{$StructName :=.StructName}}
-// Add{{$StructName}}ReqForm
-type Add{{$StructName}}ReqForm struct {
-	{{- range .Fields -}}
-	  {{if not .IsBaseModel -}} 
-		{{if .IsUnique -}}
-			{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s // {{.HumpName}}
-		{{else}}
-			{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // {{.HumpName}}
-        {{end -}}
-	  {{end -}}
-	{{end -}}
-}
 
-func (a *Add{{$StructName}}ReqForm) Valid() (err error) {
-	return
-}
-
-{{$PrimaryKey:=""}}
-// Edit{{$StructName}}ReqForm 
-type Edit{{$StructName}}ReqForm struct {
-	{{range .Fields -}}
-      {{if .IsPrimary -}}
-		{{$PrimaryKey = .FieldName -}} 
-		{{$PrimaryKeyType = .Type -}}
-		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"%s 
-      {{end -}}
-	  {{if not .IsBaseModel -}}
-		{{.FieldName}} {{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // {{.HumpName}}
-	  {{end -}}
-	{{- end -}}
-}
-
-func (a *Edit{{$StructName}}ReqForm) Valid() (err error) {
-	return
-}
-
-// Add{{$StructName}}One add
-func Add{{$StructName}}One(req *Add{{$StructName}}ReqForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+// Add add one record
+func Add(req *model_{{$Package}}.AddForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -70,10 +34,9 @@ func Add{{$StructName}}One(req *Add{{$StructName}}ReqForm)(ret *model_{{$Package
 	return
 }
 
-type {{$StructName}}BatchForm []*Add{{$StructName}}ReqForm
 
-// Add{{$StructName}}Batch add {{$StructName}} 
-func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Package}}.{{$StructName}} , err error) {
+// AddBatch add {{$StructName}}  batch record
+func AddBatch(req model_{{$Package}}.AddBatchForm)(ret []* model_{{$Package}}.{{$StructName}} , err error) {
 	var(
 		datas []* model_{{$Package}}.{{$StructName}}
 	)
@@ -81,7 +44,7 @@ func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Pack
 		return
 	}
 	// if needed todo add you business logic code
-	if err =model_{{$Package}}.Add{{$StructName}}Batch(datas);err!=nil{
+	if err =model_{{$Package}}.AddBatch(datas);err!=nil{
 		return	
 	}
 	// 
@@ -89,8 +52,16 @@ func Add{{$StructName}}Batch(req {{$StructName}}BatchForm)(ret []* model_{{$Pack
 	return   
 }
 
-// Edit{{$StructName}}One edit
-func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(err error) {
+{{$PrimaryKey := ""}}
+
+{{range .Fields -}}
+      {{if .IsPrimary -}}
+		 {{$PrimaryKey = .FieldName -}}
+      {{end -}}
+{{- end -}}
+
+// EditOne edit {{$StructName}} one record
+func EditOne(req *model_{{$Package}}.EditForm)(err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -101,35 +72,30 @@ func Edit{{$StructName}}One(req *Edit{{$StructName}}ReqForm)(err error) {
 	if err = mapstructure.Decode(req, data); err != nil {
 		return
 	}
-	if err = data.SetQueryBy{{$PrimaryKey}}(req.{{$PrimaryKey}}).Update();err!=nil{return}
+	if err = data.SetQuery{{$PrimaryKey}}(req.{{$PrimaryKey}}).Update();err!=nil{return}
 
 	return
 }
 
-// Get{{$StructName}}List get list {{$StructName}} data
-func Get{{$StructName}}List(req *model_{{$Package}}.Query{{$StructName}}Form)(ret []*model_{{$Package}}.{{$StructName}}, err error) {
+// GetList get list {{$StructName}} data
+func GetList(req *model_{{$Package}}.QueryForm)(ret []*model_{{$Package}}.{{$StructName}}, err error) {
 	var(
 		datas []*model_{{$Package}}.{{$StructName}}
 	)
+	if err = req.Valid();err!=nil{
+		return
+	}
 	// if needed todo add you business logic code code
-	
-	if datas,err = model_{{$Package}}.Get{{$StructName}}List(req);err!=nil{return}
+	if datas,err = model_{{$Package}}.GetList(req);err!=nil{return}
 	
 	// 
 	ret = datas
 	return
 }
 
-// Operating{{$StructName}}OneReqForm
-type Operating{{$StructName}}OneReqForm struct {
-	{{range .Fields -}}
-      {{if .IsUnique -}}
-		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s // this form just pass a parameter 
-      {{end -}}
-	{{- end -}}
-}
-// Get{{$StructName}}One get {{$StructName}} 
-func Get{{$StructName}}One(req *Operating{{$StructName}}OneReqForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+
+// Get get {{$StructName}} one record
+func Get(req *model_{{$Package}}.OpOneForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
 	var(
 		d  *model_{{$Package}}.{{$StructName}}
 		)
@@ -137,7 +103,7 @@ func Get{{$StructName}}One(req *Operating{{$StructName}}OneReqForm)(ret *model_{
       {{if .IsUnique -}}
 		if req.{{.FieldName}}!=nil{
 			d = model_{{$Package}}.New{{$StructName}}()
-			if err = d.SetQueryBy{{.FieldName}}(*req.{{.FieldName}}).GetBy{{.FieldName}}();err!=nil{
+			if err = d.SetQuery{{.FieldName}}(*req.{{.FieldName}}).GetBy{{.FieldName}}();err!=nil{
 				return
 			}
 			goto RETURN
@@ -150,8 +116,8 @@ RETURN:
 	return   
 }
 
-// Delete{{$StructName}}One delete {{$StructName}} 
-func Delete{{$StructName}}One(req *Operating{{$StructName}}OneReqForm)( err error) {
+// Delete delete {{$StructName}} one record
+func Delete(req *model_{{$Package}}.OpOneForm)( err error) {
 	var(
 		d  *model_{{$Package}}.{{$StructName}}
 		)
@@ -159,18 +125,18 @@ func Delete{{$StructName}}One(req *Operating{{$StructName}}OneReqForm)( err erro
       {{if .IsUnique -}}
 		if req.{{.FieldName}}!=nil{
 			d = model_{{$Package}}.New{{$StructName}}()
-			return d.SetQueryBy{{.FieldName}}(*req.{{.FieldName}}).DeleteBy{{.FieldName}}()
+			return d.SetQuery{{.FieldName}}(*req.{{.FieldName}}).DeleteBy{{.FieldName}}()
 		} 
       {{end -}}
 	{{- end -}}
 	return
 }
 
-// Delete{{$StructName}}Batch delete {{$StructName}} 
-func Delete{{$StructName}}Batch(ids []string)( err error) {
+// DeleteBatch delete {{$StructName}} batch record
+func DeleteBatch(ids []string)( err error) {
 	// if needed todo add you business logic code
-	return   model_{{$Package}}.Delete{{$StructName}}Batch(ids)
+	return   model_{{$Package}}.DeleteBatch(ids)
 }
 
-`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
+`)
 )
