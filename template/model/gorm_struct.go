@@ -7,6 +7,7 @@ var (
 {{$TFErr :=.TFErr}}
 import (
 {{- if $TFErr}} "errors" {{end}}
+	"fmt"
 	"{{.Mod}}/app/model/common"
 	"gorm.io/gorm"
 )
@@ -137,31 +138,31 @@ func TableName()string{
 		}
 {{- else if eq .Type $Int}}
 		for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else if eq .Type $Int8}}
 			for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else if eq .Type $Int16}}
 		for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else if eq .Type $Int32}}
 		for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else if eq .Type $Int64}}
 		for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else if eq .Type $Float32}}
 		for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else if eq .Type $Float64}}
 		for _,v:=range q.{{.FieldName}}List{
-				db = db.Where("level"+v.Symbol+"?", v.Value)
+				db = db.Where("{{.DBName}}"+v.Symbol+"?", fmt.Sprintf("%s",v.Value))
 		}
 {{- else -}}
 		if q.{{.FieldName}}!=nil{
@@ -205,7 +206,7 @@ func TableName()string{
 		}
 		{{- end}}
 	{{end}}
-`)
+`, "%v", "%v", "%v", "%v", "%v", "%v", "%v")
 	GORMInitDB = `
 package model
 {{$Mod :=.Mod}}
@@ -291,21 +292,21 @@ import (
 	type QueryForm struct{
 {{- range .Fields}}{{- if not .IsUnique}}		
 {{- if eq .Type $Time -}}
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Int -}}
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Int8 -}}
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Int16 -}} 
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Int32 -}} 
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Int64 -}} 
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Float32 -}} 
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else if eq .Type $Float64 -}} 
-		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List
+		{{.FieldName}}List []*model_common.FieldData %sjson:"{{.HumpName}}List" form:"{{.HumpName}}List"%s  // cond {{.FieldName}}List; value type should be {{.Type}}
 {{- else -}}
 		{{.FieldName}} *{{.Type}} %sjson:"{{.HumpName}}" form:"{{.HumpName}}"%s  // cond {{.FieldName}}
 {{- end}}	
