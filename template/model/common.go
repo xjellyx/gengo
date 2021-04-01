@@ -32,7 +32,7 @@ var(
 	Tables []interface{}
 )
 
-func GetDB(dbs ...*gorm.DB)(ret *gorm.DB){
+func GetDB(dbs ...*gorm.DB)(res *gorm.DB){
 	if len(dbs)>0{
 		return dbs[0]
 	}

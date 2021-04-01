@@ -67,8 +67,8 @@ func TableName()string{
 	}
 
 	// GetAll get all record
-	func GetAll(dbs ...*gorm.DB)(ret []*{{$StructName}},err error){
-		if err = model_common.GetDB(dbs...).Find(&ret).Error;err!=nil{
+	func GetAll(dbs ...*gorm.DB)(res []*{{$StructName}},err error){
+		if err = model_common.GetDB(dbs...).Find(&res).Error;err!=nil{
 			{{- if $TFErr}}model_common.ModelLog.Errorln(err) 
 			err = ErrGet{{$StructName}} {{end}}
 			return
@@ -77,8 +77,8 @@ func TableName()string{
 	}
 
 	// Count get count
-	func Count(dbs ...*gorm.DB)(ret int64){
-		model_common.GetDB(dbs...).Model(&{{$StructName}}{}).Count(&ret)
+	func Count(dbs ...*gorm.DB)(res int64){
+		model_common.GetDB(dbs...).Model(&{{$StructName}}{}).Count(&res)
 		return
 	}
 
@@ -111,7 +111,7 @@ func TableName()string{
 	{{$Float32 :="float32" }}
 	{{$Time :="time.Time" }}	
 	// GetList get {{$StructName}} list some field value or some condition
-	func GetList( q *QueryForm,dbs ...*gorm.DB)(ret []*{{$StructName}},err error){
+	func GetList( q *QueryForm,dbs ...*gorm.DB)(res []*{{$StructName}},err error){
 		var(
 			db = model_common.GetDB(dbs...)
 		)
@@ -171,7 +171,7 @@ func TableName()string{
 {{- end}}
 {{end}}
 {{- end}}
-		if err =db.Find(&ret).Error;err!=nil{
+		if err =db.Find(&res).Error;err!=nil{
 			return
 		}
 		return

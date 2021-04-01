@@ -13,7 +13,7 @@ import(
 {{$StructName :=.StructName}}
 
 // Add add one record
-func Add(req *model_{{$Package}}.AddForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+func Add(req *model_{{$Package}}.AddForm)(res *model_{{$Package}}.{{$StructName}}, err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -30,13 +30,13 @@ func Add(req *model_{{$Package}}.AddForm)(ret *model_{{$Package}}.{{$StructName}
 	}
 
 	// 
-	ret = data
+	res = data
 	return
 }
 
 
 // AddBatch add {{$StructName}}  batch record
-func AddBatch(req model_{{$Package}}.AddBatchForm)(ret []* model_{{$Package}}.{{$StructName}} , err error) {
+func AddBatch(req model_{{$Package}}.AddBatchForm)(res []* model_{{$Package}}.{{$StructName}} , err error) {
 	var(
 		datas []* model_{{$Package}}.{{$StructName}}
 	)
@@ -48,7 +48,7 @@ func AddBatch(req model_{{$Package}}.AddBatchForm)(ret []* model_{{$Package}}.{{
 		return	
 	}
 	// 
-	ret = datas
+	res = datas
 	return   
 }
 
@@ -78,7 +78,7 @@ func EditOne(req *model_{{$Package}}.EditForm)(err error) {
 }
 
 // GetList get list {{$StructName}} data
-func GetList(req *model_{{$Package}}.QueryForm)(ret []*model_{{$Package}}.{{$StructName}}, err error) {
+func GetList(req *model_{{$Package}}.QueryForm)(res []*model_{{$Package}}.{{$StructName}}, err error) {
 	var(
 		datas []*model_{{$Package}}.{{$StructName}}
 	)
@@ -89,13 +89,13 @@ func GetList(req *model_{{$Package}}.QueryForm)(ret []*model_{{$Package}}.{{$Str
 	if datas,err = model_{{$Package}}.GetList(req);err!=nil{return}
 	
 	// 
-	ret = datas
+	res = datas
 	return
 }
 
 
 // Get get {{$StructName}} one record
-func Get(req *model_{{$Package}}.OpOneForm)(ret *model_{{$Package}}.{{$StructName}}, err error) {
+func Get(req *model_{{$Package}}.OpOneForm)(res *model_{{$Package}}.{{$StructName}}, err error) {
 	var(
 		d  *model_{{$Package}}.{{$StructName}}
 		)
@@ -112,7 +112,7 @@ func Get(req *model_{{$Package}}.OpOneForm)(ret *model_{{$Package}}.{{$StructNam
 	{{- end -}}
 
 RETURN:
-	ret = d
+	res = d
 	return   
 }
 
