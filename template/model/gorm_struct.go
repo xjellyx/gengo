@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"{{.Mod}}/app/model/common"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 {{$StructName :=.StructName}}
 // Error
