@@ -7,7 +7,6 @@ var (
 {{$TFErr :=.TFErr}}
 import (
 {{- if $TFErr}} "errors" {{end}}
-	"fmt"
 	"{{.Mod}}/app/model/common"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
