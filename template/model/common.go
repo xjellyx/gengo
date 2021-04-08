@@ -16,6 +16,11 @@ type FieldData struct {
 	Symbol string %sjson:"symbol" form:"symbol"%s // symbol should send: "<", "<=", ">", ">=", "="
 }
 
+type Order struct {
+	Name string %sjson:"name"%s // 字段名
+	Desc bool   %sjson:"desc"%s // 默认升序
+}
+
 func (f *FieldData) Valid() (err error) {
 	switch f.Symbol {
 	case "<", "<=", ">", ">=", "=":
@@ -38,5 +43,5 @@ func GetDB(dbs ...*gorm.DB)(res *gorm.DB){
 	}
 	return DB
 }
-`, "`", "`", "`", "`")
+`, "`", "`", "`", "`", "`", "`", "`", "`")
 )

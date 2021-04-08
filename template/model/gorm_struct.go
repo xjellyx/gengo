@@ -118,7 +118,7 @@ func TableName()string{
 		// order
 		if len(q.Order)>0{
 			for _,v:=range q.Order {
-				db =db.Order(v)
+				db = db.Order(clause.OrderByColumn{Column: clause.Column{Name: v.Name}, Desc: v.Desc})
 			}
 		}
 		// pageSize
@@ -312,7 +312,7 @@ import (
 {{- end}}	
 {{- end}}
 {{end}}
-		Order []string %sjson:"order" form:"order"%s
+		Order []model_common.Order %sjson:"order" form:"order"%s
 		PageNum int %sjson:"pageNum" form:"pageNum"%s // get all without uploading
 		PageSize int %sjson:"pageSize" form:"pageSize"%s // get all without uploading
 		}
