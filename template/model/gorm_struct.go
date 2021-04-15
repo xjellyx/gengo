@@ -8,6 +8,7 @@ var (
 import (
 {{- if $TFErr}} "errors" {{end}}
 	"{{.Mod}}/app/model/common"
+	gorm_v1 "github.com/jinzhu/gorm"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -116,9 +117,9 @@ func TableName()string{
 			db = model_common.GetDB(dbs...)
 		)
 		// order
-		if len(q.Order)>0{
-			for _,v:=range q.Order {
-				db = db.Order(clause.OrderByColumn{Column: clause.Column{Name: v.Name}, Desc: v.Desc})
+		if len(q.Order) > 0 {
+			for _, v := range q.Order {
+				db = db.Order(clause.OrderByColumn{Column: clause.Column{Name: gorm_v1.ToColumnName(v.Name)}, Desc: v.Desc})
 			}
 		}
 		// pageSize
