@@ -2,6 +2,7 @@ package parse
 
 import (
 	"fmt"
+	"github.com/jinzhu/inflection"
 	"github.com/olongfen/contrib/log"
 	"github.com/olongfen/gengo/utils"
 	"go/ast"
@@ -19,6 +20,7 @@ type Field struct {
 	DBName      string // database name
 	FieldName   string // field name
 	HumpName    string // hump name
+	PackageName string // package name
 	Type        string // field type
 	IsBaseModel bool   // base model field
 	IsUnique    bool   // is unique true
@@ -32,18 +34,20 @@ type StructData struct {
 	StructName   string // struct name
 	LowerName    string
 	HumpName     string
+	PackageName  string
 	Fields       []*Field // struct field
 }
 
 type Config struct {
-	Package string
-	TFErr   bool
-	Mod     string
-	ORM     string
-	WEB     string
+	Package  string
+	TFErr    bool
+	Mod      string
+	ORM      string
+	WEB      string
+	Separate bool
 }
 
-// parser
+// Parser parse struct
 type Parser struct {
 	Filepath      string
 	Structs       []*StructData
@@ -62,7 +66,7 @@ func NewParser(f string) *Parser {
 	}
 }
 
-// ImportDir 导入文件并获取go文件
+// ParserFile 导入文件并获取go文件
 func (p *Parser) ParserFile() (err error) {
 	var (
 		f *ast.File
@@ -94,9 +98,10 @@ func (p *Parser) ParserStruct() (err error) {
 					data      = new(StructData)
 					haveModel = false
 				)
-				data.StructName = ts.Name.Name
+				data.StructName = inflection.Plural(ts.Name.Name)
 				data.LowerName = gorm.ToDBName(data.StructName)
 				data.HumpName = utils.SQLColumnToHumpStyle(data.LowerName)
+				data.PackageName = utils.SQLColumn2PkgStyle(data.LowerName)
 				var structType *ast.StructType
 				if structType, ok = ts.Type.(*ast.StructType); !ok {
 					continue

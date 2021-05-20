@@ -15,6 +15,7 @@ const (
 	modFlag            = "mod"
 	webFlag            = "web"
 	ormFlag            = "orm"
+	separateFlag       = "separate"
 )
 
 var (
@@ -57,6 +58,13 @@ var (
 			Required: false,
 			Value:    true,
 		},
+		&cli.BoolFlag{
+			Name:     separateFlag,
+			Aliases:  []string{"s"},
+			Usage:    "The name of separate package",
+			Required: false,
+			Value:    false,
+		},
 	}
 )
 
@@ -66,10 +74,11 @@ func initAction(c *cli.Context) error {
 		gen *generate.Generator
 	)
 	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(c.String(inputDirFlag)), parse.Config{
-		Mod:   c.String(modFlag),
-		TFErr: c.Bool(transformErrorFlag),
-		WEB:   c.String(webFlag),
-		ORM:   c.String(ormFlag),
+		Mod:      c.String(modFlag),
+		TFErr:    c.Bool(transformErrorFlag),
+		WEB:      c.String(webFlag),
+		ORM:      c.String(ormFlag),
+		Separate: c.Bool(separateFlag),
 	}); err != nil {
 		return err
 	}

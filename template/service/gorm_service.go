@@ -3,29 +3,39 @@ package service
 import "fmt"
 
 var (
-	GORMServiceTemplate = fmt.Sprintf(`package svc_{{.Package}}
+	GORMServiceTemplate = fmt.Sprintf(`
+{{$Sep :=.Separate}}
+{{- if $Sep}}package svc_{{.Package}}{{- else}}package services{{- end}}
+
 {{- $Package := .Package }}
 import(
-	"{{.Mod}}/app/model/{{$Package}}"
+	{{- if $Sep}}"{{.Mod}}/app/models/{{.PackageName}}"{{- else}}"{{.Mod}}/app/models"{{- end}}
+	"fmt"
 	"github.com/mitchellh/mapstructure"
 )
 
 {{$StructName :=.StructName}}
-
-// Add add one record
-func Add(req *model_{{$Package}}.AddForm)(res *model_{{$Package}}.{{$StructName}}, err error) {
+{{$Primary:= ""}}
+{{$PrimaryType := ""}}
+{{$PrimaryHumpName := ""}}
+{{- range .Fields}}{{if .IsPrimary}}
+{{$Primary = .DBName}}
+{{$PrimaryType = .Type}}
+{{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
+// Add{{$StructName}} add one record
+func Add{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}Form)(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
 	var(
-		data = new(model_{{$Package}}.{{$StructName}})
+		data = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}})
 	)
 	if err = mapstructure.Decode(req,data);err!=nil{
 		return
 	}
 	// if needed todo add you business logic code
 
-	if err = data.Add();err!=nil{
+	if err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}(data);err!=nil{
 		return
 	}
 
@@ -35,20 +45,20 @@ func Add(req *model_{{$Package}}.AddForm)(res *model_{{$Package}}.{{$StructName}
 }
 
 
-// AddBatch add {{$StructName}}  batch record
-func AddBatch(req model_{{$Package}}.AddBatchForm)(res []* model_{{$Package}}.{{$StructName}} , err error) {
+// Add{{$StructName}}Batch add {{$StructName}}  batch record
+func Add{{$StructName}}Batch(req {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}BatchForm)(res []*{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}} , err error) {
 	var(
-		datas []* model_{{$Package}}.{{$StructName}}
+		data []* {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}}
 	)
-	if err = mapstructure.Decode(req,&datas);err!=nil{
+	if err = mapstructure.Decode(req,&data);err!=nil{
 		return
 	}
 	// if needed todo add you business logic code
-	if err =model_{{$Package}}.AddBatch(datas);err!=nil{
+	if err ={{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Add{{$StructName}}Batch(data);err!=nil{
 		return	
 	}
 	// 
-	res = datas
+	res = data
 	return   
 }
 
@@ -60,83 +70,80 @@ func AddBatch(req model_{{$Package}}.AddBatchForm)(res []* model_{{$Package}}.{{
       {{end -}}
 {{- end -}}
 
-// EditOne edit {{$StructName}} one record
-func EditOne(req *model_{{$Package}}.EditForm)(err error) {
+// Up{{$StructName}} edit {{$StructName}} one record
+func Up{{$StructName}}({{$PrimaryHumpName}} interface{},req *{{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Up{{$StructName}}Form)(err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
 	var(
-		data =model_{{$Package}}.New{{$StructName}}()
+		data ={{if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.New{{$StructName}}()
 	)
 	// if needed todo add you business logic code code
 	if err = mapstructure.Decode(req, data); err != nil {
 		return
 	}
-	if err = data.SetQuery{{$PrimaryKey}}(req.{{$PrimaryKey}}).Update();err!=nil{return}
+	if err = {{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Up{{$StructName}}({{$PrimaryHumpName}},data);err!=nil{return}
 
 	return
 }
 
-// GetList get list {{$StructName}} data
-func GetList(req *model_{{$Package}}.QueryForm)(res []*model_{{$Package}}.{{$StructName}}, err error) {
+// Get{{$StructName}}List get {{$StructName}} list  data
+func Get{{$StructName}}List(req *{{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Query{{$StructName}}Form)(res interface{}, err error) {
 	var(
-		datas []*model_{{$Package}}.{{$StructName}}
+		data []*{{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}} // default get all column,if choice some column, define struct response form by yourself
 	)
-	if err = req.Valid();err!=nil{
-		return
-	}
 	// if needed todo add you business logic code code
-	if datas,err = model_{{$Package}}.GetList(req);err!=nil{return}
+	if err = {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Get{{$StructName}}List(req,&data);err!=nil{return}
 	
 	// 
-	res = datas
+	res = data
 	return
 }
 
 
-// Get get {{$StructName}} one record
-func Get(req *model_{{$Package}}.OpOneForm)(res *model_{{$Package}}.{{$StructName}}, err error) {
+// Get{{$StructName}} get {{$StructName}} one record
+func Get{{$StructName}}(field string,value interface{})(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
 	var(
-		d  *model_{{$Package}}.{{$StructName}}
-		)
+		d  *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}
+	)
+	switch field{
 	{{range .Fields -}}
       {{if .IsUnique -}}
-		if req.{{.FieldName}}!=nil{
-			d = model_{{$Package}}.New{{$StructName}}()
-			if err = d.SetQuery{{.FieldName}}(*req.{{.FieldName}}).GetBy{{.FieldName}}();err!=nil{
+		case "{{.DBName}}":
+			if d,err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Get{{$StructName}}{{.FieldName}}(value);err!=nil{
 				return
-			}
-			goto RETURN
-		} 
+			} 
       {{end -}}
 	{{- end -}}
-
-RETURN:
+	default:
+		err = fmt.Errorf("field: %s not support in this way",field)
+	}
 	res = d
 	return   
 }
 
-// Delete delete {{$StructName}} one record
-func Delete(req *model_{{$Package}}.OpOneForm)( err error) {
-	var(
-		d  *model_{{$Package}}.{{$StructName}}
-		)
+// Del{{$StructName}} delete {{$StructName}} one record
+func Del{{$StructName}}(field string,value interface{})( err error) {
+	switch field{
 	{{range .Fields -}}
       {{if .IsUnique -}}
-		if req.{{.FieldName}}!=nil{
-			d = model_{{$Package}}.New{{$StructName}}()
-			return d.SetQuery{{.FieldName}}(*req.{{.FieldName}}).DeleteBy{{.FieldName}}()
-		} 
+		case "{{.DBName}}":
+			if err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Del{{$StructName}}{{.FieldName}}(value);err!=nil{
+				return
+			} 
       {{end -}}
 	{{- end -}}
+	default:
+		err = fmt.Errorf("field: %s not support in this way",field)
+	}
 	return
 }
 
-// DeleteBatch delete {{$StructName}} batch record
-func DeleteBatch(ids []string)( err error) {
+// Del{{$StructName}}Batch delete {{$StructName}} batch record
+func Del{{$StructName}}Batch(ids []string)( err error) {
 	// if needed todo add you business logic code
-	return   model_{{$Package}}.DeleteBatch(ids)
+	return   {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Del{{$StructName}}Batch(ids)
 }
 
-`)
+`, "%s", "%s")
 )

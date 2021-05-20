@@ -20,8 +20,23 @@ func SQLColumnToHumpStyle(in string) (ret string) {
 	return
 }
 
+// SQLColumn2PkgStyle sql转-格式
+func SQLColumn2PkgStyle(in string) (ret string) {
+	var (
+		arr  []string
+		data []string
+	)
+	arr = strings.Split(in, "_")
+	for _, v := range arr {
+		if len(v) > 0 {
+			data = append(data, v)
+		}
+	}
+	return strings.Join(data, "-")
+}
+
 func Exists(path string) bool {
-	_, err := os.Stat(path)    //os.Stat获取文件信息
+	_, err := os.Stat(path) //os.Stat获取文件信息
 	if err != nil {
 		if os.IsExist(err) {
 			return true

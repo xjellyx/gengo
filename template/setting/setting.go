@@ -63,7 +63,7 @@ var (
 	DevEnv       = false
 )
 
-func init() {
+func Init() {
 	var (
 		err        error
 		configFile string

@@ -4,20 +4,29 @@ import (
 	"fmt"
 )
 
-var GinTemplate = fmt.Sprintf(`package api_{{.Package}}
+var GinTemplate = fmt.Sprintf(`
+{{$Sep :=.Separate}}
+{{- if $Sep}}package api_{{.Package}}{{- else}}package apis{{- end}}
 {{- $Package := .Package }}
 {{- $Router :=.HumpName}}
 import(
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"{{.Mod}}/app/service/{{$Package}}"
-	"{{.Mod}}/app/model/{{$Package}}"
+{{if $Sep}}"{{.Mod}}/app/services/{{.PackageName}}"{{- else}}"{{.Mod}}/app/services"{{end}}
+{{if $Sep}}"{{.Mod}}/app/models/{{.PackageName}}"{{- else}}"{{.Mod}}/app/models"{{end}}
 	"{{.Mod}}/app/controller/response"
 )
-
+{{$Primary:= ""}}
+{{$PrimaryType := ""}}
+{{$PrimaryHumpName := ""}}
+{{- range .Fields}}{{if .IsPrimary}}
+{{$Primary = .DBName}}
+{{$PrimaryType = .Type}}
+{{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
 {{$StructName := .StructName}}
 
-// Ctl 
-type Ctl struct {}
+// Ctl{{$StructName}} ctrl
+type Ctl{{$StructName}} struct {}
 
 // Add add {{$StructName}} one record
 // @tags {{$StructName}}
@@ -25,13 +34,13 @@ type Ctl struct {}
 // @Description add {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body model_{{$Package}}.AddForm true "添加{{$StructName}}表单" 
+// @Param {} body {{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}Form true "添加{{$StructName}}表单" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Router}}/add [post]
-func (ct *Ctl) Add(c *gin.Context) {
+// @router /api/v1/{{$Router}} [post]
+func (ct *Ctl{{$StructName}}) Add(c *gin.Context) {
 	var(
-		req = &model_{{$Package}}.AddForm{}
+		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Add{{$StructName}}Form)
 		data interface{}
 		code = response.CodeFail
 		err error
@@ -48,27 +57,27 @@ func (ct *Ctl) Add(c *gin.Context) {
 	if err = c.ShouldBind(req);err!=nil{
 		return
 	}
-	if data, err = svc_{{$Package}}.Add(req); err != nil {
+	if data, err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Add{{$StructName}}(req); err != nil {
 		return
 	}
 	
 }
 
-// AddList add {{$StructName}} list record
+// AddBatch add {{$StructName}} batch record
 // @tags {{$StructName}}
 // @Summary add {{$StructName}} list record
 // @Description add {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param  {} body model_{{$Package}}.AddBatchForm true "添加{{$StructName}}表单列表" 
+// @Param  {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}BatchForm true "添加{{$StructName}}表单列表" 
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Router}}/addList [post]
-func (ct *Ctl) AddList(c *gin.Context) {
+// @router /api/v1/{{$Router}}/batch [post]
+func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
 	var(
 	data interface{}
 	code = response.CodeFail
-	req model_{{$Package}}.AddBatchForm
+	req {{ if $Sep}}model_{{$Package}}{{else}}models{{- end}}.Add{{$StructName}}BatchForm
 	err error)
 	defer func(){
 		if err!=nil{
@@ -82,24 +91,26 @@ func (ct *Ctl) AddList(c *gin.Context) {
 		return
 	}
 	
-	if data,err = svc_{{$Package}}.AddBatch(req);err!=nil{
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Add{{$StructName}}Batch(req);err!=nil{
 		return
 	}
 }
 
-// Edit edit {{$StructName}} one record
+// Update update {{$StructName}} one record
 // @tags {{$StructName}}
 // @Summary edit {{$StructName}} one record
 // @Description edit {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param  {} body model_{{$Package}}.EditForm true "编辑{{$StructName}}表单" 
+// @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
+// @Param {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Up{{$StructName}}Form true "update {{$StructName}} form"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Router}}/edit [put]
-func (ct *Ctl) Edit(c *gin.Context) {
+// @router /api/v1/{{$Router}}/:{{$PrimaryHumpName}} [put]
+func (ct *Ctl{{$StructName}}) Update(c *gin.Context) {
 	var(
-		req = new(model_{{$Package}}.EditForm)
+		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Up{{$StructName}}Form)
+		key string
 		err error
 		code = response.CodeFail	
 )
@@ -110,10 +121,14 @@ func (ct *Ctl) Edit(c *gin.Context) {
 			response.NewGinResponse(c).Success(nil).Response()
 		}
 	}()
+	if key=c.Param("{{$PrimaryHumpName}}");len(key)==0{
+		err=fmt.Errorf("%s must be send","{{$PrimaryHumpName}}")
+		return
+	}
 	if err = c.ShouldBind(&req);err!=nil{
 		return
 	}
-	if err = svc_{{$Package}}.EditOne(req);err!=nil{
+	if err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Up{{$StructName}}(key,req);err!=nil{
 		return
 	}
 }
@@ -124,14 +139,14 @@ func (ct *Ctl) Edit(c *gin.Context) {
 // @Description get {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} query model_{{$Package}}.OpOneForm true "{{$StructName}} form, just pass a parameter"
+// @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Router}}/get  [get]
-func (ct *Ctl) Get(c *gin.Context) {
+// @router /api/v1/{{$Router}}/:{{$Primary}}  [get]
+func (ct *Ctl{{$StructName}}) Get(c *gin.Context) {
 	var(
 		data interface{}
-		req =new(model_{{$Package}}.OpOneForm)
+		key  string
 		err error
 		code = response.CodeFail	
 )
@@ -142,28 +157,61 @@ func (ct *Ctl) Get(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	if err =  c.ShouldBindQuery(req);err!=nil{
+	if key=c.Param("{{$PrimaryHumpName}}");len(key)==0{
+		err=fmt.Errorf("%s must be send","{{$PrimaryHumpName}}")
 		return
 	}
-	if data,err = svc_{{$Package}}.Get(req);err!=nil{
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Get{{$StructName}}("{{$PrimaryHumpName}}",key);err!=nil{
 		return
 	}
 }
 
+{{$Int :=  "int" }}
+{{$Int8  :="int8" }}
+{{$Int16 :="int16" }}
+{{$Int32 :="int32" }}
+{{$Int64 :="int64" }}
+{{$Float64 :="float64" }}
+{{$Float32 :="float32" }}
+{{$Time :="time.Time" }}
 // GetList get {{$StructName}} list record
 // @tags {{$StructName}}
 // @Summary get {{$StructName}} list record
 // @Description get {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param {} body model_{{$Package}}.QueryForm true "获取{{$StructName}}列表form"
+{{- range .Fields}}{{- if not .IsUnique}}		
+{{if eq .Type $Time -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int8 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int16 -}} 
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int32 -}} 
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int64 -}} 
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Float32 -}} 
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Float64 -}} 
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else -}}
+// @Param	{{.HumpName}} query {{.Type}}  false "{{.FieldName}}"
+{{- end -}}	
+{{- end -}}
+{{end -}}
+// @Param orderMap query string false "example: orderMap[column]=desc"
+// @Param pageSize query int false "page size"
+// @Param pageNum query int false "page num"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router /api/v1/{{$Router}}/list  [post]
-func (ct *Ctl) GetList(c *gin.Context) {
+// @router /api/v1/{{$Router}}  [get]
+func (ct *Ctl{{$StructName}}) GetList(c *gin.Context) {
 	var(
 		data interface{}
-		req = new(model_{{$Package}}.QueryForm )
+		req = new({{ if $Sep}}model_{{$Package}}.{{- else}}models.{{- end}}Query{{$StructName}}Form )
 		err error
 		code = response.CodeFail	
 )
@@ -174,10 +222,30 @@ func (ct *Ctl) GetList(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	if err = c.ShouldBind(req);err!=nil{
+	if err = c.ShouldBindQuery(req);err!=nil{
 		return
 	}
-	if data,err = svc_{{$Package}}.GetList(req);err!=nil{return}
+{{- range .Fields}}{{- if not .IsUnique}}		
+{{if eq .Type $Time -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int8 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int16 -}} 
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int32 -}} 
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int64 -}} 
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Float32 -}} 
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Float64 -}} 
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{- end -}}	
+{{- end -}}
+{{end -}}
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Get{{$StructName}}List(req);err!=nil{return}
 }
 
 // Delete delete {{$StructName}} one record
@@ -186,15 +254,15 @@ func (ct *Ctl) GetList(c *gin.Context) {
 // @Description delete {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body model_{{$Package}}.OpOneForm true "{{$StructName}} form, just pass a parameter"
+// @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router  /api/v1/{{$Router}}/delete [delete]
-func (ct *Ctl) Delete(c *gin.Context) {
+// @router  /api/v1/{{$Router}}/:{{$PrimaryHumpName}} [delete]
+func (ct *Ctl{{$StructName}}) Delete(c *gin.Context) {
 	var(
 		data interface{}
 		err error
-		req = new(model_{{$Package}}.OpOneForm)
+		key string
 		code = response.CodeFail	
 )
 	defer func(){
@@ -204,24 +272,27 @@ func (ct *Ctl) Delete(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	if err = c.ShouldBind(req);err!=nil{return}
-	if err = svc_{{$Package}}.Delete(req);err!=nil{return}
+	if key=c.Param("{{$PrimaryHumpName}}");len(key)==0{
+		err=fmt.Errorf("%s must be send","{{$PrimaryHumpName}}")
+		return
+	}
+	if err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Del{{$StructName}}("{{$PrimaryHumpName}}",key);err!=nil{return}
 }
 
-// DeleteList delete {{$StructName}} list record
+// DeleteBatch delete {{$StructName}} list record
 // @tags {{$StructName}}
 // @Summary delete {{$StructName}} list record
 // @Description delete {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param ids body []string true "{{$StructName}} ID list"
+// @Param {{$PrimaryHumpName}}s body []string true "{{$StructName}} {{$PrimaryHumpName}} list"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
-// @router  /api/v1/{{$Router}}/deleteList [delete]
-func (ct *Ctl) DeleteList(c *gin.Context) {
+// @router  /api/v1/{{$Router}}/batch [delete]
+func (ct *Ctl{{$StructName}}) DeleteBatch(c *gin.Context) {
 	var(
 		data interface{}
-		ids []string
+		{{$PrimaryHumpName}}s []string
 		err error
 		code = response.CodeFail	
 )
@@ -232,11 +303,11 @@ func (ct *Ctl) DeleteList(c *gin.Context) {
 			response.NewGinResponse(c).Success(data).Response()
 		}
 	}()
-	if err = c.ShouldBind(&ids);err!=nil{return}
-	if err = svc_{{$Package}}.DeleteBatch(ids);err!=nil{return}
+	if err = c.ShouldBind(&{{$PrimaryHumpName}}s);err!=nil{return}
+	if err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Del{{$StructName}}Batch(ids);err!=nil{return}
 }
 
-`)
+`, "%s", "%s", "%s")
 
 var (
 	ResponseTemplate = fmt.Sprintf(`
@@ -258,7 +329,14 @@ type Gin struct {
 	status int
 }
 
+type ErrMsgData struct {
+	ErrCode int
+	ErrMsg  string
+	Details interface{}
+}
+
 type Response struct {
+	Error ErrMsgData    %sjson:"error"%s
 	Meta    Meta        %sjson:"meta"%s
 	Code    int         %sjson:"code"%s
 	Message string      %sjson:"message"%s
@@ -293,8 +371,11 @@ func NewGinResponse(c *gin.Context) *Gin {
 	}
 }
 
-func (g *Gin) Fail(code int, message string) *Gin {
+func (g *Gin) Fail(code int, message string, errMsg ...ErrMsgData) *Gin {
 	g.resp.Code = code
+	if len(errMsg) > 0 {
+		g.resp.Error=errMsg[0]
+	}
 	g.resp.Message = message
 	return g
 }
@@ -323,11 +404,12 @@ func (g *Gin) Response() {
 	return
 }
 
-`, "`", "`", "`", "`", "`", "`", "`", "`")
+`, "`", "`", "`", "`", "`", "`", "`", "`", "`", "`")
 )
 
 var (
 	InitRouterTemplate = fmt.Sprintf(`
+{{$Sep :=.Separate}}
 package router
 {{$Mod :=.Mod}}
 import (
@@ -339,21 +421,17 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"github.com/olongfen/contrib/log"
-
-	{{- range .Structs}}
-	_"{{$Mod}}/app/controller/router/{{.LowerName}}"
-	{{- end}}
+	{{if $Sep}}"{{$Mod}}/app/controller/common"{{else}}"{{$Mod}}/app/controller/apis"{{end}}
 	"{{.Mod}}/app/controller/middleware"
 	"{{.Mod}}/app/setting"
-	"{{.Mod}}/app/controller/common"
 )
 
 // 初始化路由
 var (
 	Engine   = gin.Default()
 )
-// init 初始化路由模块
-func init() {
+// Init 初始化路由模块
+func Init() {
 	if !setting.DevEnv {
 		gin.SetMode(gin.ReleaseMode)
 		Engine.Use(gin.Logger())
@@ -385,7 +463,7 @@ func init() {
 		api.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"ping": "pong >>>>>>> update"})
 		})
-		for _,v:=range ctl_common.RouterGroupFunctions{
+		for _,v:=range {{if $Sep}}ctl_common{{else}}apis{{end}}.RouterGroupFunctions{
 			v(api)
 		}
 
@@ -436,7 +514,7 @@ var (
 	}, ",")
 )
 
-// CORS
+// CORS cors
 func CORS() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		origin := ctx.GetHeader("Origin")
@@ -454,7 +532,7 @@ func CORS() gin.HandlerFunc {
 	}
 }
 
-// Common
+// Common common head
 func Common() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		header := context.Writer.Header()
@@ -495,25 +573,36 @@ func GinLogFormatter() gin.HandlerFunc {
 var (
 	StructRouterTemplate = fmt.Sprintf(`package router
 
-import  ("{{.Mod}}/app/controller/api/{{.Package}}"
+import  (
+{{$Sep :=.Separate}}
+{{- if $Sep}}
+"{{.Mod}}/app/controller/apis/{{.Package}}"
 "{{.Mod}}/app/controller/common"
+{{- else}}"{{.Mod}}/app/controller/apis"{{- end}}
+
 "github.com/gin-gonic/gin"
 )
-
+{{$Primary:= ""}}
+{{$PrimaryType := ""}}
+{{$PrimaryHumpName := ""}}
+{{- range .Fields}}{{if .IsPrimary}}
+{{$Primary = .DBName}}
+{{$PrimaryType = .Type}}
+{{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
 func init{{.StructName}}(r *gin.RouterGroup) {
-	c := &api_{{.Package}}.Ctl{}
+	c := {{- if $Sep}}&api_{{.Package}}.{{- else}}&apis.{{- end}}Ctl{{.StructName}}{}
 	{{.HumpName}} := r.Group("{{.HumpName}}")
-	{{.HumpName}}.GET("get", c.Get)
-	{{.HumpName}}.POST("list", c.GetList)
-	{{.HumpName}}.POST("add", c.Add)
-	{{.HumpName}}.POST("addList", c.AddList)
-	{{.HumpName}}.PUT("edit", c.Edit)
-	{{.HumpName}}.DELETE("delete", c.Delete)
-	{{.HumpName}}.DELETE("deleteList", c.DeleteList)
+	{{.HumpName}}.GET(":{{$PrimaryHumpName}}", c.Get)
+	{{.HumpName}}.GET("", c.GetList)
+	{{.HumpName}}.POST("", c.Add)
+	{{.HumpName}}.POST("batch", c.AddBatch)
+	{{.HumpName}}.PUT(":{{$PrimaryHumpName}}", c.Update)
+	// {{.HumpName}}.DELETE(":{{$PrimaryHumpName}}", c.Delete) // default close
+	// {{.HumpName}}.DELETE("batch", c.DeleteBatch) // default close
 }
 
 func init() {
-ctl_common.RouterGroupFunctions = append(ctl_common.RouterGroupFunctions,init{{.StructName}})
+ {{- if $Sep}}ctl_common{{else}}apis{{end}}.RouterGroupFunctions = append( {{- if $Sep}}ctl_common{{else}}apis{{end}}.RouterGroupFunctions,init{{.StructName}})
 }
 
 

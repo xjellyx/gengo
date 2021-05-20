@@ -11,25 +11,27 @@ import(
 "gorm.io/gorm"
 )
 
-type FieldData struct {
-	Value interface{} %sjson:"value" form:"value"%s
-	Symbol string %sjson:"symbol" form:"symbol"%s // symbol should send: "<", "<=", ">", ">=", "="
-}
-
-type Order struct {
-	Name string %sjson:"name"%s // 字段名
-	Desc bool   %sjson:"desc"%s // 默认升序
-}
-
-func (f *FieldData) Valid() (err error) {
-	switch f.Symbol {
-	case "<", "<=", ">", ">=", "=":
-	default:
-		err = fmt.Errorf("value: %v symbol %s invalid", f.Value, f.Symbol)
-		return
+func ValidFieldSymbol(field, s string)(res string,err error) {
+		switch s {
+		case "<", "<=", ">", ">=", "=","!=":
+			return s,nil
+		case "gt":
+			return ">",nil
+		case "ge":
+			return ">=",nil
+		case "lt":
+			return "<",nil
+		case "le":
+			return "<=",nil
+		case "ne":
+			return "!=",nil
+		case "eq":
+			return "=",nil
+		default:
+			err = fmt.Errorf("value: %s symbol %s invalid", field, s)
+			return
+		}
 	}
-	return
-}
 
 var(
 	ModelLog *log.Logger
@@ -43,5 +45,5 @@ func GetDB(dbs ...*gorm.DB)(res *gorm.DB){
 	}
 	return DB
 }
-`, "`", "`", "`", "`", "`", "`", "`", "`")
+`, "%s", "%s")
 )

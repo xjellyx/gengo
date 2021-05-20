@@ -5,7 +5,7 @@ import "fmt"
 var (
 	GINMainTemplate = fmt.Sprintf(`
 package main
-
+{{$Sep := .Separate}}
 import (
 	"crypto/tls"
 	"net/http"
@@ -17,16 +17,17 @@ import (
 
 	"github.com/olongfen/contrib/log"
 	"github.com/sirupsen/logrus"
-
-	"{{.Mod}}/app/controller/router/init_router"
-	_ "{{.Mod}}/app/controller/router/init_router"
-	_ "{{.Mod}}/app/model/init_db"
 	"{{.Mod}}/app/setting"
-	_ "{{.Mod}}/app/setting"
+	{{if $Sep}}"{{.Mod}}/app/models/init-db"{{else}}"{{.Mod}}/app/models"{{end}}
+	"{{.Mod}}/app/controller/router"
+
 	_ "{{.Mod}}/docs"
 )
 
 func main() {
+	setting.Init()
+	models.Init()
+	router.Init()
 	go func() {
 		// 开启服务
 		s := &http.Server{

@@ -3,7 +3,9 @@ package controller
 import "fmt"
 
 var (
-	CommonTemplate = fmt.Sprintf(`package {{.Package}}
+	CommonTemplate = fmt.Sprintf(`
+{{$Sep := .Separate}}
+{{- if $Sep}}package {{.Package}}{{else}}package apis{{end}}
 {{$Mod :=.Mod}}
 import(
 "github.com/gin-gonic/gin"

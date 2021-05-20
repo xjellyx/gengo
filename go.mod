@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/jinzhu/gorm v1.9.16
+	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible // indirect
 	github.com/lestrrat-go/strftime v1.0.3 // indirect

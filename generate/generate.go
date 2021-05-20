@@ -36,13 +36,15 @@ const (
 )
 
 type Struct struct {
-	LowerName  string
-	StructName string
+	LowerName   string
+	StructName  string
+	PackageName string
 }
 
 type InitDB struct {
-	Structs []Struct
-	Mod     string
+	Structs  []Struct
+	Mod      string
+	Separate bool
 }
 
 // The Generator is the one responsible for generating the code, adding the imports, formating, and writing it to the file.
@@ -106,10 +108,12 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 	g.config = c
 	g.init()
 	g.initDB.Mod = c.Mod
+	g.initDB.Separate = c.Separate
 	for _, v := range p.Structs {
 		g.initDB.Structs = append(g.initDB.Structs, Struct{
-			LowerName:  v.LowerName,
-			StructName: v.StructName,
+			LowerName:   v.LowerName,
+			StructName:  v.StructName,
+			PackageName: v.PackageName,
 		})
 		v.Config = c
 		v.Config.Package = v.LowerName
@@ -133,7 +137,11 @@ func (g *Generator) genModel() (err error) {
 	}
 	c := parse.Config{}
 	c = g.config
-	c.Package = "model_common"
+	if !c.Separate {
+		c.Package = "models"
+	} else {
+		c.Package = "model_common"
+	}
 	if err = temp.Execute(g.modelBuf[common], c); err != nil {
 		return
 	}
@@ -233,7 +241,11 @@ func (g *Generator) genService() (err error) {
 	}
 	c := parse.Config{}
 	c = g.config
-	c.Package = "svc_common"
+	if !c.Separate {
+		c.Package = "services"
+	} else {
+		c.Package = "svc_common"
+	}
 	if err = temp.Execute(g.serviceBuf[common], c); err != nil {
 		return
 	}
@@ -272,7 +284,12 @@ func (g *Generator) genControl() (err error) {
 	}
 	c := parse.Config{}
 	c = g.config
-	c.Package = "ctl_common"
+	if !c.Separate {
+		c.Package = "apis"
+	} else {
+		c.Package = "ctl_common"
+	}
+
 	if err = temp.Execute(g.controlBuf[common], c); err != nil {
 		return
 	}
@@ -301,9 +318,9 @@ func (g *Generator) genControl() (err error) {
 		}
 		rc := struct {
 			Structs []*parse.StructData
-			Mod     string
+			parse.Config
 		}{}
-		rc.Mod = g.config.Mod
+		rc.Config = g.config
 		rc.Structs = g.parser.Structs
 		if err = temp.Execute(g.routerBuf[initRouter], rc); err != nil {
 			return
@@ -414,6 +431,7 @@ func (g *Generator) formatService() {
 	for k, _ := range g.serviceBuf {
 		formatedOutput, err := format.Source(g.serviceBuf[k].Bytes())
 		if err != nil {
+			log.Warnln(string(g.serviceBuf[k].Bytes()))
 			log.Fatalln(err)
 		}
 		g.serviceBuf[k] = bytes.NewBuffer(formatedOutput)
@@ -425,6 +443,7 @@ func (g *Generator) formatController() {
 	for k, _ := range g.controlBuf {
 		formatedOutput, err := format.Source(g.controlBuf[k].Bytes())
 		if err != nil {
+			log.Warnln(string(g.controlBuf[k].Bytes()))
 			log.Fatalln(err)
 		}
 		g.controlBuf[k] = bytes.NewBuffer(formatedOutput)
@@ -433,6 +452,7 @@ func (g *Generator) formatController() {
 	for k, _ := range g.routerBuf {
 		formatedOutput, err := format.Source(g.routerBuf[k].Bytes())
 		if err != nil {
+			log.Warnln(string(g.routerBuf[k].Bytes()))
 			log.Fatalln(err)
 		}
 		g.routerBuf[k] = bytes.NewBuffer(formatedOutput)
@@ -477,23 +497,35 @@ func (g *Generator) Format() *Generator {
 // flushModel
 func (g *Generator) flushModel() (err error) {
 	for k, _ := range g.modelBuf {
-		s := gorm.ToDBName(k)
-		dir := g.outputDir + "/app/model/"
-		if strings.HasSuffix(s, "_form") {
-			dir += strings.TrimSuffix(s, "_form")
-		} else {
-			dir += s
-		}
-		if err = os.MkdirAll(dir, 0777); err != nil {
-			if !os.IsExist(err) {
-				return
+		var (
+			filename string
+			s        = gorm.ToDBName(k)
+		)
+		if g.config.Separate {
+			dir := g.outputDir + "/app/models/"
+			if strings.HasSuffix(s, "_form") {
+				dir += utils.SQLColumn2PkgStyle(strings.TrimSuffix(s, "_form"))
+			} else {
+				dir += utils.SQLColumn2PkgStyle(s)
 			}
-		}
-		filename := dir + "/model_" + s + ".go"
-		if utils.Exists(filename) && k != initDB {
-			continue
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			filename = dir + "/model_" + s + ".go"
+		} else {
+			if err = os.MkdirAll(g.outputDir+"/app/models/", 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			filename = g.outputDir + "/app/models/" + s + ".go"
 		}
 
+		if utils.Exists(filename) {
+			continue
+		}
 		if err = ioutil.WriteFile(filename, g.modelBuf[k].Bytes(), 0777); err != nil {
 			return
 		}
@@ -503,18 +535,31 @@ func (g *Generator) flushModel() (err error) {
 
 func (g *Generator) flushService() (err error) {
 	for k, _ := range g.serviceBuf {
-		s := gorm.ToDBName(k)
-		dir := g.outputDir + "/app/service/" + s
-		if err = os.MkdirAll(dir, 0777); err != nil {
-			if !os.IsExist(err) {
-				return
+		var (
+			filename string
+			s        = gorm.ToDBName(k)
+		)
+		if g.config.Separate {
+
+			dir := g.outputDir + "/app/services/" + utils.SQLColumn2PkgStyle(s)
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
 			}
+			filename = dir + "/svc_" + s + ".go"
+		} else {
+			dir := g.outputDir + "/app/services/"
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			filename = g.outputDir + "/app/services/" + s + ".go"
 		}
-		filename := dir + "/svc_" + s + ".go"
 		if utils.Exists(filename) {
 			continue
 		}
-
 		if err = ioutil.WriteFile(filename, g.serviceBuf[k].Bytes(), 0777); err != nil {
 			return
 		}
@@ -577,28 +622,48 @@ func (g *Generator) flushSetting() (err error) {
 // flushController
 func (g *Generator) flushController() (err error) {
 	for k, _ := range g.controlBuf {
-		s := gorm.ToDBName(k)
+		var (
+			s        = gorm.ToDBName(k)
+			filename string
+		)
 		var (
 			dir    string
 			prefix string
 		)
 		switch k {
-		case common, response, middleware:
-			dir = g.outputDir + "/app/controller/" + s
+		case response, middleware:
+			dir = g.outputDir + "/app/controller/" + utils.SQLColumn2PkgStyle(s)
 			prefix = "/"
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			filename = dir + prefix + s + ".go"
 		default:
-			dir = g.outputDir + "/app/controller/api/" + s
-			prefix = "/api_"
-		}
-
-		if err = os.MkdirAll(dir, 0777); err != nil {
-			if !os.IsExist(err) {
-				return
+			if k == common {
+				dir = g.outputDir + "/app/controller/" + s + "/"
+			} else {
+				dir = g.outputDir + "/app/controller/apis/" + s
+				prefix = "/api_"
+			}
+			if g.config.Separate {
+				if err = os.MkdirAll(dir, 0777); err != nil {
+					if !os.IsExist(err) {
+						return
+					}
+				}
+				filename = dir + prefix + s + ".go"
+			} else {
+				if err = os.MkdirAll(g.outputDir+"/app/controller/apis/", 0777); err != nil {
+					if !os.IsExist(err) {
+						return
+					}
+				}
+				filename = g.outputDir + "/app/controller/apis/" + s + ".go"
 			}
 		}
 
-		filename := dir + prefix + s + ".go"
-		log.Println(filename)
 		if utils.Exists(filename) {
 			continue
 		}
@@ -611,15 +676,16 @@ func (g *Generator) flushController() (err error) {
 	for k, _ := range g.routerBuf {
 		s := gorm.ToDBName(k)
 		var (
-			dir string
+			filename string
+			dir      string
 		)
-		dir = g.outputDir + "/app/controller/router/" + s
+		dir = g.outputDir + "/app/controller/router/"
 		if err = os.MkdirAll(dir, 0777); err != nil {
 			if !os.IsExist(err) {
 				return
 			}
 		}
-		filename := dir + "/route_" + s + ".go"
+		filename = dir + s + ".go"
 		if utils.Exists(filename) {
 			continue
 		}
