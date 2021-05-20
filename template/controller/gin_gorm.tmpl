@@ -1,0 +1,302 @@
+
+{{$Sep :=.Separate}}
+{{- if $Sep}}package api_{{.Package}}{{- else}}package apis{{- end}}
+{{- $Package := .Package }}
+{{- $Router :=.PluralName}}
+import(
+	"fmt"
+	"github.com/gin-gonic/gin"
+{{if $Sep}}"{{.Mod}}/app/services/{{.PackageName}}"{{- else}}"{{.Mod}}/app/services"{{end}}
+{{if $Sep}}"{{.Mod}}/app/models/{{.PackageName}}"{{- else}}"{{.Mod}}/app/models"{{end}}
+	"{{.Mod}}/app/controller/response"
+)
+{{$Primary:= ""}}
+{{$PrimaryType := ""}}
+{{$PrimaryHumpName := ""}}
+{{- range .Fields}}{{if .IsPrimary}}
+{{$Primary = .DBName}}
+{{$PrimaryType = .Type}}
+{{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
+{{$StructName := .StructName}}
+
+// Ctl{{$StructName}} ctrl
+type Ctl{{$StructName}} struct {}
+
+// Add add {{$StructName}} one record
+// @tags {{$StructName}}
+// @Summary add {{$StructName}} one record
+// @Description add {{$StructName}} one record
+// @Accept json
+// @Produce json
+// @Param {} body {{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}Form true "添加{{$StructName}}表单"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router /api/v1/{{$Router}} [post]
+func (ct *Ctl{{$StructName}}) Add(c *gin.Context) {
+	var(
+		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Add{{$StructName}}Form)
+		data interface{}
+		code = response.CodeFail
+		err error
+	)
+
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else {
+			response.NewGinResponse(c).Success(data).Response()
+		}
+	}()
+
+	if err = c.ShouldBind(req);err!=nil{
+		return
+	}
+	if data, err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Add{{$StructName}}(req); err != nil {
+		return
+	}
+
+}
+
+// AddBatch add {{$StructName}} batch record
+// @tags {{$StructName}}
+// @Summary add {{$StructName}} list record
+// @Description add {{$StructName}} list record
+// @Accept json
+// @Produce json
+// @Param  {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}BatchForm true "添加{{$StructName}}表单列表"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router /api/v1/{{$Router}}/batch [post]
+func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
+	var(
+	data interface{}
+	code = response.CodeFail
+	req {{ if $Sep}}model_{{$Package}}{{else}}models{{- end}}.Add{{$StructName}}BatchForm
+	err error)
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else{
+			response.NewGinResponse(c).Success(data).Response()
+		}
+	}()
+
+	if err = c.ShouldBind(&req);err!=nil{
+		return
+	}
+
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Add{{$StructName}}Batch(req);err!=nil{
+		return
+	}
+}
+
+// Update update {{$StructName}} one record
+// @tags {{$StructName}}
+// @Summary edit {{$StructName}} one record
+// @Description edit {{$StructName}} one record
+// @Accept json
+// @Produce json
+// @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
+// @Param {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Up{{$StructName}}Form true "update {{$StructName}} form"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router /api/v1/{{$Router}}/:{{$PrimaryHumpName}} [put]
+func (ct *Ctl{{$StructName}}) Update(c *gin.Context) {
+	var(
+		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Up{{$StructName}}Form)
+		key string
+		err error
+		code = response.CodeFail
+)
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else{
+			response.NewGinResponse(c).Success(nil).Response()
+		}
+	}()
+	if key=c.Param("{{$PrimaryHumpName}}");len(key)==0{
+		err=fmt.Errorf("%s must be send","{{$PrimaryHumpName}}")
+		return
+	}
+	if err = c.ShouldBind(&req);err!=nil{
+		return
+	}
+	if err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Up{{$StructName}}(key,req);err!=nil{
+		return
+	}
+}
+
+// Get get {{$StructName}} one record
+// @tags {{$StructName}}
+// @Summary get {{$StructName}} one record
+// @Description get {{$StructName}} one record
+// @Accept json
+// @Produce json
+// @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router /api/v1/{{$Router}}/:{{$Primary}}  [get]
+func (ct *Ctl{{$StructName}}) Get(c *gin.Context) {
+	var(
+		data interface{}
+		key  string
+		err error
+		code = response.CodeFail
+)
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else{
+			response.NewGinResponse(c).Success(data).Response()
+		}
+	}()
+	if key=c.Param("{{$PrimaryHumpName}}");len(key)==0{
+		err=fmt.Errorf("%s must be send","{{$PrimaryHumpName}}")
+		return
+	}
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Get{{$StructName}}("{{$PrimaryHumpName}}",key);err!=nil{
+		return
+	}
+}
+
+{{$Int :=  "int" }}
+{{$Int8  :="int8" }}
+{{$Int16 :="int16" }}
+{{$Int32 :="int32" }}
+{{$Int64 :="int64" }}
+{{$Float64 :="float64" }}
+{{$Float32 :="float32" }}
+{{$Time :="time.Time" }}
+// GetList get {{$StructName}} list record
+// @tags {{$StructName}}
+// @Summary get {{$StructName}} list record
+// @Description get {{$StructName}} list record
+// @Accept json
+// @Produce json
+{{- range .Fields}}{{- if not .IsUnique}}
+{{if eq .Type $Time -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int8 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int16 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int32 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Int64 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Float32 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else if eq .Type $Float64 -}}
+// @Param	{{.HumpName}}Map query string  false  "example: {{.HumpName}}Map[>]=some value&{{.HumpName}}Map[<]=some value; key must be >,>=,<,<=,!=,=,gt,ge,lt,le,ne,eq"
+{{else -}}
+// @Param	{{.HumpName}} query {{.Type}}  false "{{.FieldName}}"
+{{- end -}}
+{{- end -}}
+{{end -}}
+// @Param orderMap query string false "example: orderMap[column]=desc"
+// @Param pageSize query int false "page size"
+// @Param pageNum query int false "page num"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router /api/v1/{{$Router}}  [get]
+func (ct *Ctl{{$StructName}}) GetList(c *gin.Context) {
+	var(
+		data interface{}
+		req = new({{ if $Sep}}model_{{$Package}}.{{- else}}models.{{- end}}Query{{$StructName}}Form )
+		err error
+		code = response.CodeFail
+)
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else{
+			response.NewGinResponse(c).Success(data).Response()
+		}
+	}()
+	if err = c.ShouldBindQuery(req);err!=nil{
+		return
+	}
+{{- range .Fields}}{{- if not .IsUnique}}
+{{if eq .Type $Time -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int8 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int16 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int32 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Int64 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Float32 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{else if eq .Type $Float64 -}}
+	req.{{.FieldName}}Map=c.QueryMap("{{.HumpName}}Map")
+{{- end -}}
+{{- end -}}
+{{end -}}
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Get{{$StructName}}List(req);err!=nil{return}
+}
+
+// Delete delete {{$StructName}} one record
+// @tags {{$StructName}}
+// @Summary delete {{$StructName}} one record
+// @Description delete {{$StructName}} one record
+// @Accept json
+// @Produce json
+// @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router  /api/v1/{{$Router}}/:{{$PrimaryHumpName}} [delete]
+func (ct *Ctl{{$StructName}}) Delete(c *gin.Context) {
+	var(
+		data interface{}
+		err error
+		key string
+		code = response.CodeFail
+)
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else{
+			response.NewGinResponse(c).Success(data).Response()
+		}
+	}()
+	if key=c.Param("{{$PrimaryHumpName}}");len(key)==0{
+		err=fmt.Errorf("%s must be send","{{$PrimaryHumpName}}")
+		return
+	}
+	if err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Del{{$StructName}}("{{$PrimaryHumpName}}",key);err!=nil{return}
+}
+
+// DeleteBatch delete {{$StructName}} list record
+// @tags {{$StructName}}
+// @Summary delete {{$StructName}} list record
+// @Description delete {{$StructName}} list record
+// @Accept json
+// @Produce json
+// @Param {{$PrimaryHumpName}}s body []string true "{{$StructName}} {{$PrimaryHumpName}} list"
+// @Success 200  {object} response.Response
+// @Failure 500  {object} response.Response
+// @router  /api/v1/{{$Router}}/batch [delete]
+func (ct *Ctl{{$StructName}}) DeleteBatch(c *gin.Context) {
+	var(
+		data interface{}
+		{{$PrimaryHumpName}}s []string
+		err error
+		code = response.CodeFail
+)
+	defer func(){
+		if err!=nil{
+			response.NewGinResponse(c).Fail(code,err.Error()).Response()
+		}else{
+			response.NewGinResponse(c).Success(data).Response()
+		}
+	}()
+	if err = c.ShouldBind(&{{$PrimaryHumpName}}s);err!=nil{return}
+	if err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Del{{$StructName}}Batch(ids);err!=nil{return}
+}

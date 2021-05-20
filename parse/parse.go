@@ -32,6 +32,7 @@ type StructData struct {
 	Config
 	StructDetail string // struct detail
 	StructName   string // struct name
+	PluralName   string
 	LowerName    string
 	HumpName     string
 	PackageName  string
@@ -39,12 +40,14 @@ type StructData struct {
 }
 
 type Config struct {
-	Package  string
-	TFErr    bool
-	Mod      string
-	ORM      string
-	WEB      string
-	Separate bool
+	Package      string
+	TFErr        bool
+	Mod          string
+	ORM          string
+	WEB          string
+	Separate     bool
+	RemoveSource bool
+	GenPkg       string
 }
 
 // Parser parse struct
@@ -98,9 +101,10 @@ func (p *Parser) ParserStruct() (err error) {
 					data      = new(StructData)
 					haveModel = false
 				)
-				data.StructName = inflection.Plural(ts.Name.Name)
+				data.StructName = ts.Name.Name
 				data.LowerName = gorm.ToDBName(data.StructName)
 				data.HumpName = utils.SQLColumnToHumpStyle(data.LowerName)
+				data.PluralName = inflection.Plural(data.LowerName)
 				data.PackageName = utils.SQLColumn2PkgStyle(data.LowerName)
 				var structType *ast.StructType
 				if structType, ok = ts.Type.(*ast.StructType); !ok {

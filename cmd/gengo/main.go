@@ -16,6 +16,8 @@ const (
 	webFlag            = "web"
 	ormFlag            = "orm"
 	separateFlag       = "separate"
+	genPkgFlag         = "genPkg"
+	removeSourceFlag   = "removeSource"
 )
 
 var (
@@ -24,7 +26,8 @@ var (
 			Name:     outputDirFlag,
 			Aliases:  []string{"o"},
 			Usage:    "The name of schema output to generate output",
-			Required: true,
+			Required: false,
+			Value:    ".",
 		},
 		&cli.StringFlag{
 			Name:     inputDirFlag,
@@ -36,6 +39,12 @@ var (
 			Name:     modFlag,
 			Aliases:  []string{"m"},
 			Usage:    "The name of project go module",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:     genPkgFlag,
+			Aliases:  []string{"g"},
+			Usage:    "The name of define model struct package name",
 			Required: true,
 		},
 		&cli.StringFlag{
@@ -65,6 +74,13 @@ var (
 			Required: false,
 			Value:    false,
 		},
+		//&cli.BoolFlag{
+		//	Name:     removeSourceFlag,
+		//	Aliases:  []string{"rm"},
+		//	Usage:    "The name of remove source",
+		//	Required: false,
+		//	Value:    false,
+		//},
 	}
 )
 
@@ -72,14 +88,24 @@ func initAction(c *cli.Context) error {
 	var (
 		err error
 		gen *generate.Generator
+		cfg = parse.Config{
+			Mod:      c.String(modFlag),
+			TFErr:    c.Bool(transformErrorFlag),
+			WEB:      c.String(webFlag),
+			ORM:      c.String(ormFlag),
+			Separate: c.Bool(separateFlag),
+			GenPkg:   c.String(genPkgFlag),
+			// RemoveSource: c.Bool(removeSourceFlag),
+		}
 	)
-	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(c.String(inputDirFlag)), parse.Config{
-		Mod:      c.String(modFlag),
-		TFErr:    c.Bool(transformErrorFlag),
-		WEB:      c.String(webFlag),
-		ORM:      c.String(ormFlag),
-		Separate: c.Bool(separateFlag),
-	}); err != nil {
+	//if len(c.String(outputDirFlag)) == 0 {
+	//	d, _ := os.Getwd()
+	//	fmt.Println(d, cfg.GenPkg)
+	//	index := strings.Index(d, cfg.GenPkg)
+	//	output = d[:index]
+	//}
+
+	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(c.String(inputDirFlag)), cfg); err != nil {
 		return err
 	}
 	gen.Generate().Format().Flush().GenDocs()

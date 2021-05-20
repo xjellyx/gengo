@@ -1,0 +1,216 @@
+{{$Sep := .Separate}}
+{{- if $Sep}}package model_{{.Package}}{{- else}}package models{{- end}}
+{{$TFErr :=.TFErr}}
+{{$Int :=  "int" }}
+{{$Int8  :="int8" }}
+{{$Int16 :="int16" }}
+{{$Int32 :="int32" }}
+{{$Int64 :="int64" }}
+{{$Float64 :="float64" }}
+{{$Float32 :="float32" }}
+{{$Time :="time.Time" }}
+import (
+{{- if $TFErr}} "errors" {{end}}
+	{{if $Sep}}"{{.Mod}}/app/models/common"{{- end}}
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	v1 "github.com/jinzhu/gorm"
+)
+{{$StructName :=.StructName}}
+// Error
+{{if $TFErr}} var(
+	ErrCreate{{$StructName}} = errors.New("create {{$StructName}} failed")
+	ErrDelete{{$StructName}} = errors.New("delete {{$StructName}} failed")
+	ErrGet{{$StructName}} = errors.New("get {{$StructName}} failed")
+	ErrUpdate{{$StructName}} = errors.New("update {{$StructName}} failed")
+)
+{{end}}
+// {{$StructName}} table
+type {{$StructName}} {{.StructDetail}}
+
+func init(){
+  {{- if $Sep}}model_common.{{- end}}Tables = append({{- if $Sep}}model_common.{{- end}}Tables,&{{$StructName}}{})
+}
+{{$Primary:= ""}}
+{{$PrimaryType := ""}}
+{{$PrimaryHumpName := ""}}
+{{- range .Fields}}{{if .IsPrimary}}
+{{$Primary = .DBName}}
+{{$PrimaryType = .Type}}
+{{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
+
+// New{{$StructName}} new
+func New{{$StructName}}()*{{$StructName}}{
+	return new({{$StructName}})
+}
+
+// {{$StructName}}TableName TableName
+func {{$StructName}}TableName()string{
+	return "{{.PluralName}}"
+}
+
+// Add{{$StructName}} add one record
+func Add{{$StructName}}(data *{{$StructName}},dbs ...*gorm.DB)(err error) {
+		if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Create(data).Error;err!=nil{
+			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+			err = ErrCreate{{$StructName}}{{end}}
+			return
+		}
+		return
+	}
+
+// Del{{$StructName}} delete record
+func Del{{$StructName}}({{$PrimaryHumpName}} interface{},dbs ...*gorm.DB)(err error) {
+		if err =  {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Delete("{{$Primary}} = ?",{{$PrimaryHumpName}}).Error;err!=nil{
+			{{- if $TFErr}} err = ErrDelete{{$StructName}} {{end}}
+			return
+		}
+		return
+	}
+
+// Up{{$StructName}} update record
+func Up{{$StructName}}({{$PrimaryHumpName}},m interface{},dbs ...*gorm.DB)(err error) {
+		if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Where("{{$Primary}} = ?",{{$PrimaryHumpName}}).Updates(m).Error;err!=nil{
+			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+			err = ErrUpdate{{$StructName}} {{end}}
+			return
+		}
+		return
+	}
+
+// GetAll{{$StructName}} get all record
+func GetAll{{$StructName}}(dbs ...*gorm.DB)(res []*{{$StructName}},err error){
+		if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Find(&res).Error;err!=nil{
+			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+			err = ErrGet{{$StructName}} {{end}}
+			return
+		}
+		return
+	}
+
+// Count{{$StructName}} get count
+func Count{{$StructName}}(dbs ...*gorm.DB)(res int64){
+		{{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Count(&res)
+		return
+	}
+
+// Del{{$StructName}}Batch delete {{$StructName}} batch
+func Del{{$StructName}}Batch( {{$PrimaryHumpName}}s []string, dbs ...*gorm.DB)(err error){
+		if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Delete("id in ?",{{$PrimaryHumpName}}s).Error;err!=nil{
+			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+			err = ErrDelete{{$StructName}} {{end}}
+			return
+		}
+		return
+	}
+
+// Add{{$StructName}}Batch add {{$StructName}} batch
+func Add{{$StructName}}Batch( datas []*{{$StructName}},dbs ...*gorm.DB)(err error){
+		if err =  {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Create(datas).Error;err!=nil{
+			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+			err = ErrCreate{{$StructName}} {{end}}
+			return
+		}
+		return
+	}
+
+// Get{{$StructName}}List get {{$StructName}} list some field value or some condition
+func Get{{$StructName}}List(q *Query{{$StructName}}Form ,res interface{},dbs ...*gorm.DB)(err error){
+		var(
+			db = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{})
+		)
+{{- range .Fields}}{{- if not .IsUnique}}
+{{- if eq .Type $Time -}}
+		for k,v:=range q.{{.FieldName}}Map{
+			if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+		db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Int -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Int8 -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Int16 -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Int32 -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Int64 -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Float32 -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else if eq .Type $Float64 -}}
+			for k,v:=range q.{{.FieldName}}Map{
+				if k,err={{- if $Sep}}model_common.{{- end}}ValidFieldSymbol("{{.DBName}}",k);err!=nil{return}
+			db=db.Where("{{.DBName}} "+k+ " ?",v)
+		}
+{{- else -}}
+		if q.{{.FieldName}}!=nil{
+			db = db.Where("{{.DBName}} = ?",q.{{.FieldName}})
+		}
+{{- end}}
+{{- end}}
+{{end}}
+
+for k, v := range q.OrderMap {
+	var(desc bool)
+	if v=="desc"{
+		desc =true
+	}else{
+		desc=false
+	}
+		db = db.Order(clause.OrderByColumn{Column: clause.Column{Name: v1.ToColumnName(k)}, Desc: desc})
+}
+if q.PageSize!=0{
+	db = db.Limit(q.PageSize)
+}
+if q.PageNum!=0{
+	q.PageNum = (q.PageNum - 1) * q.PageSize
+	db = db.Offset(q.PageNum)
+}
+if err =db.Find(res).Error;err!=nil{
+			return
+		}
+		return
+	}
+
+{{- range .Fields}}
+{{- if .IsUnique}}
+// Get{{$StructName}}{{.FieldName}} get one record by {{.FieldName}}
+func Get{{$StructName}}{{.FieldName}}({{.HumpName}} interface{},dbs ...*gorm.DB)(res *{{$StructName}},err error){
+			res=new({{$StructName}})
+			if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).First(res,"{{.DBName}} = ?",{{.HumpName}}).Error;err!=nil{
+				{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+				err = ErrGet{{$StructName}} {{end}}
+				return
+			}
+			return
+		}
+
+// Del{{$StructName}}{{.FieldName}} delete record by {{.FieldName}}
+func  Del{{$StructName}}{{.FieldName}}({{.HumpName}} interface{},dbs ...*gorm.DB)(err error) {
+			if err= {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Delete("{{.DBName}} = ?",{{.HumpName}}).Error;err!=nil{
+				{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
+				err = ErrDelete{{$StructName}} {{end}}
+				return
+				}
+			return
+		}
+		{{- end}}
+	{{end}}

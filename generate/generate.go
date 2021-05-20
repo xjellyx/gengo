@@ -132,7 +132,7 @@ func (g *Generator) genModel() (err error) {
 		temp *template.Template
 	)
 	// 生成model公共代码
-	if temp, err = template.New(common).Parse(model.CommonTemplate); err != nil {
+	if temp, err = template.New(common).Parse(model.TemplateCommon.String()); err != nil {
 		return
 	}
 	c := parse.Config{}
@@ -147,7 +147,7 @@ func (g *Generator) genModel() (err error) {
 	}
 
 	// 生成初始化数据库代码
-	if temp, err = template.New(initDB).Parse(model.GORMInitDB); err != nil {
+	if temp, err = template.New(initDB).Parse(model.TemplateGORMInitDB.String()); err != nil {
 		return
 	}
 	if err = temp.Execute(g.modelBuf[initDB], g.initDB); err != nil {
@@ -161,7 +161,7 @@ func (g *Generator) genModel() (err error) {
 			continue
 		}
 		g.modelBuf[v.StructName+"_form"] = new(bytes.Buffer)
-		if t, err = template.New(v.StructName + "_form").Parse(model.GORMForm); err != nil {
+		if t, err = template.New(v.StructName + "_form").Parse(model.TemplateGORMForm.String()); err != nil {
 			return
 		}
 		if err = t.Execute(g.modelBuf[v.StructName+"_form"], v); err != nil {
@@ -169,7 +169,7 @@ func (g *Generator) genModel() (err error) {
 		}
 		switch g.config.ORM {
 		case "gorm":
-			if t, err = template.New(v.StructName).Parse(model.GORMTemplate); err != nil {
+			if t, err = template.New(v.StructName).Parse(model.TemplateGORM.String()); err != nil {
 				return
 			}
 
@@ -189,7 +189,7 @@ func (g *Generator) genSetting() (err error) {
 		temp *template.Template
 	)
 
-	if temp, err = template.New(settingName).Parse(setting.SettingTemplate); err != nil {
+	if temp, err = template.New(settingName).Parse(setting.TemplateSetting.String()); err != nil {
 		return
 	}
 	if err = temp.Execute(g.settingBuf[settingName], nil); err != nil {
@@ -197,7 +197,7 @@ func (g *Generator) genSetting() (err error) {
 	}
 
 	//
-	if temp, err = template.New(envName).Parse(setting.EnvTemplate); err != nil {
+	if temp, err = template.New(envName).Parse(setting.TemplateEnv); err != nil {
 		return
 	}
 	if err = temp.Execute(g.settingBuf[envName], nil); err != nil {
@@ -205,7 +205,7 @@ func (g *Generator) genSetting() (err error) {
 	}
 
 	//
-	if temp, err = template.New(devName).Parse(setting.ConfigTemplate); err != nil {
+	if temp, err = template.New(devName).Parse(setting.TemplateConfig.String()); err != nil {
 		return
 	}
 	if err = temp.Execute(g.settingBuf[devName], nil); err != nil {
@@ -213,7 +213,7 @@ func (g *Generator) genSetting() (err error) {
 	}
 
 	//
-	if temp, err = template.New(testName).Parse(setting.ConfigTemplate); err != nil {
+	if temp, err = template.New(testName).Parse(setting.TemplateConfig.String()); err != nil {
 		return
 	}
 	if err = temp.Execute(g.settingBuf[testName], nil); err != nil {
@@ -221,7 +221,7 @@ func (g *Generator) genSetting() (err error) {
 	}
 
 	//
-	if temp, err = template.New(prodName).Parse(setting.ConfigTemplate); err != nil {
+	if temp, err = template.New(prodName).Parse(setting.TemplateConfig.String()); err != nil {
 		return
 	}
 	if err = temp.Execute(g.settingBuf[prodName], nil); err != nil {
@@ -236,7 +236,7 @@ func (g *Generator) genService() (err error) {
 		temp *template.Template
 	)
 	// 生成model公共代码
-	if temp, err = template.New(common).Parse(service.CommonTemplate); err != nil {
+	if temp, err = template.New(common).Parse(service.TemplateCommon.String()); err != nil {
 		return
 	}
 	c := parse.Config{}
@@ -260,7 +260,7 @@ func (g *Generator) genService() (err error) {
 
 		switch g.config.ORM {
 		case "gorm":
-			if t, err = template.New(v.StructName).Parse(service.GORMServiceTemplate); err != nil {
+			if t, err = template.New(v.StructName).Parse(service.TemplateGorm.String()); err != nil {
 				return
 			}
 			if err = t.Execute(g.serviceBuf[v.StructName], v); err != nil {
@@ -279,7 +279,7 @@ func (g *Generator) genControl() (err error) {
 		temp *template.Template
 	)
 	// common
-	if temp, err = template.New(common).Parse(controller.CommonTemplate); err != nil {
+	if temp, err = template.New(common).Parse(controller.TemplateCommon.String()); err != nil {
 		return
 	}
 	c := parse.Config{}
@@ -297,7 +297,7 @@ func (g *Generator) genControl() (err error) {
 	switch g.config.WEB {
 	case "gin":
 		// response
-		if temp, err = template.New(response).Parse(controller.ResponseTemplate); err != nil {
+		if temp, err = template.New(response).Parse(controller.TemplateResponse.String()); err != nil {
 			return
 		}
 		if err = temp.Execute(g.controlBuf[response], nil); err != nil {
@@ -305,7 +305,7 @@ func (g *Generator) genControl() (err error) {
 		}
 
 		// middleware
-		if temp, err = template.New(middleware).Parse(controller.MiddlewareTemplate); err != nil {
+		if temp, err = template.New(middleware).Parse(controller.TemplateMiddleware.String()); err != nil {
 			return
 		}
 		if err = temp.Execute(g.controlBuf[middleware], nil); err != nil {
@@ -313,7 +313,7 @@ func (g *Generator) genControl() (err error) {
 		}
 
 		// init router
-		if temp, err = template.New(initRouter).Parse(controller.InitRouterTemplate); err != nil {
+		if temp, err = template.New(initRouter).Parse(controller.TemplateInitRouter.String()); err != nil {
 			return
 		}
 		rc := struct {
@@ -340,7 +340,7 @@ func (g *Generator) genControl() (err error) {
 
 		switch g.config.WEB {
 		case "gin":
-			if t, err = template.New(v.StructName).Parse(controller.GinTemplate); err != nil {
+			if t, err = template.New(v.StructName).Parse(controller.TemplateGin.String()); err != nil {
 				return
 			}
 			if err = t.Execute(g.controlBuf[v.StructName], v); err != nil {
@@ -348,7 +348,7 @@ func (g *Generator) genControl() (err error) {
 			}
 
 			//
-			if t, err = template.New(v.StructName).Parse(controller.StructRouterTemplate); err != nil {
+			if t, err = template.New(v.StructName).Parse(controller.TemplateStructRouter.String()); err != nil {
 				return
 			}
 			if err = t.Execute(g.routerBuf[v.StructName], v); err != nil {
@@ -369,7 +369,7 @@ func (g *Generator) genMain() (err error) {
 	switch g.config.WEB {
 	case "gin":
 		// common
-		if temp, err = template.New(common).Parse(gin_main.GINMainTemplate); err != nil {
+		if temp, err = template.New(common).Parse(gin_main.TemplateGinMain.String()); err != nil {
 			return
 		}
 		c := parse.Config{}

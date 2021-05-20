@@ -1,0 +1,74 @@
+
+{{$Sep := .Separate}}
+{{- if $Sep}}package model_{{.Package}}{{- else}}package models{{- end}}
+{{$StructName := .StructName}}
+{{$Int :=  "int" }}
+{{$Int8  :="int8" }}
+{{$Int16 :="int16" }}
+{{$Int32 :="int32" }}
+{{$Int64 :="int64" }}
+{{$Float64 :="float64" }}
+{{$Float32 :="float32" }}
+{{$Time :="time.Time" }}
+// Query{{$StructName}}Form query {{$StructName}}  form ;  if some field is required, add binding:"required" to tag by self
+type Query{{$StructName}}Form struct{
+{{- range .Fields}}{{- if not .IsUnique}}
+{{- if eq .Type $Time -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Int -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Int8 -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Int16 -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Int32 -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Int64 -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Float32 -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else if eq .Type $Float64 -}}
+		{{.FieldName}}Map map[string]string `json:"{{.HumpName}}Map" form:"{{.HumpName}}Map"`  // example: {{.FieldName}}Map[>]=some value&{{.FieldName}}Map[<]=some value; key must be ">,>=,<,<=,="
+{{- else -}}
+		{{.FieldName}} *{{.Type}} `json:"{{.HumpName}}" form:"{{.HumpName}}"`  // cond {{.FieldName}}
+{{- end}}
+{{- end}}
+{{end}}OrderMap map[string]string `json:"orderMap" form:"orderMap"`  // example: orderMap[column]=desc
+		PageNum int `json:"pageNum" form:"pageNum"` // get all without uploading
+		PageSize int `json:"pageSize" form:"pageSize"` // get all without uploading
+		}
+
+
+// Add{{$StructName}}Form add {{$StructName}} form
+type Add{{$StructName}}Form struct {
+	{{range .Fields -}}
+	  {{if not .IsBaseModel -}}
+		{{if .IsUnique -}}
+			{{.FieldName}} {{.Type}} `json:"{{.HumpName}}" form:"{{.HumpName}}" binding:"required"` // {{.HumpName}}
+		{{else -}}
+			{{.FieldName}} {{.Type}} `json:"{{.HumpName}}" form:"{{.HumpName}}"` // {{.HumpName}}
+        {{end -}}
+	  {{end -}}
+	{{- end -}}
+}
+
+// Valid add {{$StructName}}  form verify
+func (a *Add{{$StructName}}Form) Valid() (err error) {
+	return
+}
+
+type Add{{$StructName}}BatchForm []*Add{{$StructName}}Form
+
+// Up{{$StructName}}Form  edit {{$StructName}} form
+type Up{{$StructName}}Form struct {
+	{{range .Fields -}}
+	  {{if not .IsBaseModel -}}
+		{{.FieldName}} {{.Type}} `json:"{{.HumpName}}" form:"{{.HumpName}}"` // {{.HumpName}}
+	  {{end -}}
+	{{- end -}}
+}
+
+// Valid  edit {{$StructName}} form verify
+func (a *Up{{$StructName}}Form) Valid() (err error) {
+	return
+}

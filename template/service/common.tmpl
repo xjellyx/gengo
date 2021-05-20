@@ -1,0 +1,11 @@
+package {{.Package}}
+{{$Mod :=.Mod}}
+import(
+"github.com/olongfen/contrib/log"
+"{{$Mod}}/app/setting"
+)
+
+
+var(
+	ServiceLog = log.NewLogFile(log.ParamLog{Path: setting.Global.FilePath.LogDir + "/" + "service", Stdout: setting.DevEnv, P: setting.Global.FilePath.LogPatent})
+)
