@@ -10,7 +10,7 @@
 {{$Float64 :="float64" }}
 {{$Float32 :="float32" }}
 {{$Time :="time.Time" }}
-// Query{{$StructName}}Form query {{$StructName}}  form ;  if some field is required, add binding:"required" to tag by self
+// Query{{$StructName}}Form query {{$StructName}}  form ;  if some field is required, create binding:"required" to tag by self
 type Query{{$StructName}}Form struct{
 {{- range .Fields}}{{- if not .IsUnique}}
 {{- if eq .Type $Time -}}
@@ -39,8 +39,8 @@ type Query{{$StructName}}Form struct{
 		}
 
 
-// Add{{$StructName}}Form add {{$StructName}} form
-type Add{{$StructName}}Form struct {
+// Create{{$StructName}}Form create {{$StructName}} form
+type Create{{$StructName}}Form struct {
 	{{range .Fields -}}
 	  {{if not .IsBaseModel -}}
 		{{if .IsUnique -}}
@@ -52,12 +52,12 @@ type Add{{$StructName}}Form struct {
 	{{- end -}}
 }
 
-// Valid add {{$StructName}}  form verify
-func (a *Add{{$StructName}}Form) Valid() (err error) {
+// Valid create {{$StructName}}  form verify
+func (a *Create{{$StructName}}Form) Valid() (err error) {
 	return
 }
 
-type Add{{$StructName}}BatchForm []*Add{{$StructName}}Form
+type Create{{$StructName}}BatchForm []*Create{{$StructName}}Form
 
 // Up{{$StructName}}Form  edit {{$StructName}} form
 type Up{{$StructName}}Form struct {

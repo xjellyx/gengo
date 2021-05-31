@@ -1,0 +1,30 @@
+package router
+import  (
+{{$Sep :=.Separate}}
+{{- if $Sep}}
+"{{.Mod}}/app/controller/apis/{{.Package}}"
+"{{.Mod}}/app/controller/common"
+{{- else}}"{{.Mod}}/app/controller/apis"{{- end}}
+"github.com/gin-gonic/gin"
+)
+{{$Primary:= ""}}
+{{$PrimaryType := ""}}
+{{$PrimaryHumpName := ""}}
+{{- range .Fields}}{{if .IsPrimary}}
+{{$Primary = .DBName}}
+{{$PrimaryType = .Type}}
+{{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
+func init{{.StructName}}(r *gin.RouterGroup) {
+	c := {{- if $Sep}}&api_{{.Package}}.{{- else}}&apis.{{- end}}Ctl{{.StructName}}{}
+	{{.HumpName}} := r.Group("{{.PluralName}}")
+	{{.HumpName}}.GET(":{{$PrimaryHumpName}}", c.Get)
+	{{.HumpName}}.GET("", c.GetList)
+	{{.HumpName}}.POST("", c.Create)
+	{{.HumpName}}.POST("batch", c.AddBatch)
+	{{.HumpName}}.PUT(":{{$PrimaryHumpName}}", c.Update)
+	// {{.HumpName}}.DELETE(":{{$PrimaryHumpName}}", c.Delete) // default close
+	// {{.HumpName}}.DELETE("batch", c.DeleteBatch) // default close
+}
+func init() {
+ {{- if $Sep}}ctl_common{{else}}apis{{end}}.RouterGroupFunctions = append( {{- if $Sep}}ctl_common{{else}}apis{{end}}.RouterGroupFunctions,init{{.StructName}})
+}

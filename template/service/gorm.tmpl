@@ -17,8 +17,8 @@ import(
 {{$Primary = .DBName}}
 {{$PrimaryType = .Type}}
 {{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
-// Add{{$StructName}} add one record
-func Add{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}Form)(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
+// Create{{$StructName}} create one record
+func Create{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}Form)(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -30,7 +30,7 @@ func Add{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{end}}
 	}
 	// if needed todo add you business logic code
 
-	if err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}(data);err!=nil{
+	if err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}(data);err!=nil{
 		return
 	}
 
@@ -40,8 +40,8 @@ func Add{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{end}}
 }
 
 
-// Add{{$StructName}}Batch add {{$StructName}}  batch record
-func Add{{$StructName}}Batch(req {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}BatchForm)(res []*{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}} , err error) {
+// Create{{$StructName}}Batch create {{$StructName}}  batch record
+func Create{{$StructName}}Batch(req {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}BatchForm)(res []*{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}} , err error) {
 	var(
 		data []* {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}}
 	)
@@ -49,7 +49,7 @@ func Add{{$StructName}}Batch(req {{if $Sep}}model_{{$Package}}{{else}}models{{en
 		return
 	}
 	// if needed todo add you business logic code
-	if err ={{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Add{{$StructName}}Batch(data);err!=nil{
+	if err ={{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Create{{$StructName}}Batch(data);err!=nil{
 		return
 	}
 	//

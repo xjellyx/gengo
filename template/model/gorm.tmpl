@@ -49,8 +49,8 @@ func {{$StructName}}TableName()string{
 	return "{{.PluralName}}"
 }
 
-// Add{{$StructName}} add one record
-func Add{{$StructName}}(data *{{$StructName}},dbs ...*gorm.DB)(err error) {
+// Create{{$StructName}} create one record
+func Create{{$StructName}}(data *{{$StructName}},dbs ...*gorm.DB)(err error) {
 		if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Create(data).Error;err!=nil{
 			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
 			err = ErrCreate{{$StructName}}{{end}}
@@ -104,8 +104,8 @@ func Del{{$StructName}}Batch( {{$PrimaryHumpName}}s []string, dbs ...*gorm.DB)(e
 		return
 	}
 
-// Add{{$StructName}}Batch add {{$StructName}} batch
-func Add{{$StructName}}Batch( datas []*{{$StructName}},dbs ...*gorm.DB)(err error){
+// Create{{$StructName}}Batch create {{$StructName}} batch
+func Create{{$StructName}}Batch( datas []*{{$StructName}},dbs ...*gorm.DB)(err error){
 		if err =  {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Create(datas).Error;err!=nil{
 			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
 			err = ErrCreate{{$StructName}} {{end}}

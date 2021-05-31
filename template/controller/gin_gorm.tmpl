@@ -22,19 +22,19 @@ import(
 // Ctl{{$StructName}} ctrl
 type Ctl{{$StructName}} struct {}
 
-// Add add {{$StructName}} one record
+// Create create {{$StructName}} one record
 // @tags {{$StructName}}
-// @Summary add {{$StructName}} one record
-// @Description add {{$StructName}} one record
+// @Summary create {{$StructName}} one record
+// @Description create {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body {{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}Form true "添加{{$StructName}}表单"
+// @Param {} body {{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}Form true "添加{{$StructName}}表单"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}} [post]
-func (ct *Ctl{{$StructName}}) Add(c *gin.Context) {
+func (ct *Ctl{{$StructName}}) Create(c *gin.Context) {
 	var(
-		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Add{{$StructName}}Form)
+		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Create{{$StructName}}Form)
 		data interface{}
 		code = response.CodeFail
 		err error
@@ -51,19 +51,19 @@ func (ct *Ctl{{$StructName}}) Add(c *gin.Context) {
 	if err = c.ShouldBind(req);err!=nil{
 		return
 	}
-	if data, err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Add{{$StructName}}(req); err != nil {
+	if data, err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Create{{$StructName}}(req); err != nil {
 		return
 	}
 
 }
 
-// AddBatch add {{$StructName}} batch record
+// AddBatch create {{$StructName}} batch record
 // @tags {{$StructName}}
-// @Summary add {{$StructName}} list record
-// @Description add {{$StructName}} list record
+// @Summary create {{$StructName}} list record
+// @Description create {{$StructName}} list record
 // @Accept json
 // @Produce json
-// @Param  {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Add{{$StructName}}BatchForm true "添加{{$StructName}}表单列表"
+// @Param  {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}BatchForm true "添加{{$StructName}}表单列表"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/batch [post]
@@ -71,7 +71,7 @@ func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
 	var(
 	data interface{}
 	code = response.CodeFail
-	req {{ if $Sep}}model_{{$Package}}{{else}}models{{- end}}.Add{{$StructName}}BatchForm
+	req {{ if $Sep}}model_{{$Package}}{{else}}models{{- end}}.Create{{$StructName}}BatchForm
 	err error)
 	defer func(){
 		if err!=nil{
@@ -85,7 +85,7 @@ func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
 		return
 	}
 
-	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Add{{$StructName}}Batch(req);err!=nil{
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Create{{$StructName}}Batch(req);err!=nil{
 		return
 	}
 }
