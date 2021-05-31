@@ -114,8 +114,8 @@ func Create{{$StructName}}Batch( datas []*{{$StructName}},dbs ...*gorm.DB)(err e
 		return
 	}
 
-// Get{{$StructName}}List get {{$StructName}} list some field value or some condition
-func Get{{$StructName}}List(q *Query{{$StructName}}Form ,res interface{},dbs ...*gorm.DB)(err error){
+// Get{{$StructName}}Batch get {{$StructName}} list some field value or some condition
+func Get{{$StructName}}Batch(q *Query{{$StructName}}Form ,res interface{},dbs ...*gorm.DB)(err error){
 		var(
 			db = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{})
 		)

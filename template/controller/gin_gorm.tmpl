@@ -239,7 +239,7 @@ func (ct *Ctl{{$StructName}}) GetList(c *gin.Context) {
 {{- end -}}
 {{- end -}}
 {{end -}}
-	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Get{{$StructName}}List(req);err!=nil{return}
+	if data,err = {{- if $Sep}}svc_{{$Package}}{{- else}}services{{- end}}.Get{{$StructName}}Batch(req);err!=nil{return}
 }
 
 // Delete delete {{$StructName}} one record

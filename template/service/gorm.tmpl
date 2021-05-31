@@ -82,13 +82,13 @@ func Up{{$StructName}}({{$PrimaryHumpName}} interface{},req *{{ if $Sep}}model_{
 	return
 }
 
-// Get{{$StructName}}List get {{$StructName}} list  data
-func Get{{$StructName}}List(req *{{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Query{{$StructName}}Form)(res interface{}, err error) {
+// Get{{$StructName}}Batch get {{$StructName}} list  data
+func Get{{$StructName}}Batch(req *{{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Query{{$StructName}}Form)(res interface{}, err error) {
 	var(
 		data []*{{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}} // default get all column,if choice some column, define struct response form by yourself
 	)
 	// if needed todo add you business logic code code
-	if err = {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Get{{$StructName}}List(req,&data);err!=nil{return}
+	if err = {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Get{{$StructName}}Batch(req,&data);err!=nil{return}
 
 	//
 	res = data
