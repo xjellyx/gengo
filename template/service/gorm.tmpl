@@ -5,6 +5,7 @@
 {{- $Package := .Package }}
 import(
 	{{- if $Sep}}"{{.Mod}}/app/models/{{.PackageName}}"{{- else}}"{{.Mod}}/app/models"{{- end}}
+	"{{.Mod}}/app/form"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 )
@@ -18,7 +19,7 @@ import(
 {{$PrimaryType = .Type}}
 {{$PrimaryHumpName = .HumpName}}{{- end}}{{- end}}
 // Create{{$StructName}} create one record
-func Create{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}Form)(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
+func Create{{$StructName}}(req *form.Create{{$StructName}}Form)(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -41,7 +42,7 @@ func Create{{$StructName}}(req *{{ if $Sep}}model_{{$Package}}{{else}}models{{en
 
 
 // Create{{$StructName}}Batch create {{$StructName}}  batch record
-func Create{{$StructName}}Batch(req {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}BatchForm)(res []*{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}} , err error) {
+func Create{{$StructName}}Batch(req *form.Create{{$StructName}}BatchForm)(res []*{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}} , err error) {
 	var(
 		data []* {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}}
 	)
@@ -66,7 +67,7 @@ func Create{{$StructName}}Batch(req {{if $Sep}}model_{{$Package}}{{else}}models{
 {{- end -}}
 
 // Up{{$StructName}} edit {{$StructName}} one record
-func Up{{$StructName}}({{$PrimaryHumpName}} interface{},req *{{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Up{{$StructName}}Form)(err error) {
+func Up{{$StructName}}({{$PrimaryHumpName}} interface{},req *form.Up{{$StructName}}Form)(err error) {
 	if err = req.Valid();err!=nil{
 		return
 	}
@@ -83,9 +84,9 @@ func Up{{$StructName}}({{$PrimaryHumpName}} interface{},req *{{ if $Sep}}model_{
 }
 
 // Get{{$StructName}}Batch get {{$StructName}} list  data
-func Get{{$StructName}}Batch(req *{{ if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Query{{$StructName}}Form)(res interface{}, err error) {
+func Get{{$StructName}}Batch(req *form.Query{{$StructName}}Form)(res []*form.{{$StructName}}Res, err error) {
 	var(
-		data []*{{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.{{$StructName}} // default get all column,if choice some column, define struct response form by yourself
+		data []*form.{{$StructName}}Res
 	)
 	// if needed todo add you business logic code code
 	if err = {{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Get{{$StructName}}Batch(req,&data);err!=nil{return}
@@ -97,15 +98,15 @@ func Get{{$StructName}}Batch(req *{{ if $Sep}}model_{{$Package}}{{- else}}models
 
 
 // Get{{$StructName}} get {{$StructName}} one record
-func Get{{$StructName}}(field string,value interface{})(res *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}, err error) {
+func Get{{$StructName}}(field string,value interface{})(res *form.{{$StructName}}Res, err error) {
 	var(
-		d  *{{if $Sep}}model_{{$Package}}{{else}}models{{end}}.{{$StructName}}
+		data  =new(form.{{$StructName}}Res)
 	)
 	switch field{
 	{{range .Fields -}}
       {{if .IsUnique -}}
 		case "{{.DBName}}":
-			if d,err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Get{{$StructName}}{{.FieldName}}(value);err!=nil{
+			if err = {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Get{{$StructName}}{{.FieldName}}(value,data);err!=nil{
 				return
 			}
       {{end -}}
@@ -113,7 +114,7 @@ func Get{{$StructName}}(field string,value interface{})(res *{{if $Sep}}model_{{
 	default:
 		err = fmt.Errorf("field: %s not support in this way",field)
 	}
-	res = d
+	res = data
 	return
 }
 

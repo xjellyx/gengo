@@ -12,6 +12,7 @@
 import (
 {{- if $TFErr}} "errors" {{end}}
 	{{if $Sep}}"{{.Mod}}/app/models/common"{{- end}}
+	"{{.Mod}}/app/form"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	v1 "github.com/jinzhu/gorm"
@@ -105,8 +106,8 @@ func Del{{$StructName}}Batch( {{$PrimaryHumpName}}s []string, dbs ...*gorm.DB)(e
 	}
 
 // Create{{$StructName}}Batch create {{$StructName}} batch
-func Create{{$StructName}}Batch( datas []*{{$StructName}},dbs ...*gorm.DB)(err error){
-		if err =  {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Create(datas).Error;err!=nil{
+func Create{{$StructName}}Batch( data []*{{$StructName}},dbs ...*gorm.DB)(err error){
+		if err =  {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).Create(data).Error;err!=nil{
 			{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
 			err = ErrCreate{{$StructName}} {{end}}
 			return
@@ -115,7 +116,7 @@ func Create{{$StructName}}Batch( datas []*{{$StructName}},dbs ...*gorm.DB)(err e
 	}
 
 // Get{{$StructName}}Batch get {{$StructName}} list some field value or some condition
-func Get{{$StructName}}Batch(q *Query{{$StructName}}Form ,res interface{},dbs ...*gorm.DB)(err error){
+func Get{{$StructName}}Batch(q *form.Query{{$StructName}}Form ,res interface{},dbs ...*gorm.DB)(err error){
 		var(
 			db = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{})
 		)
@@ -193,8 +194,7 @@ if err =db.Find(res).Error;err!=nil{
 {{- range .Fields}}
 {{- if .IsUnique}}
 // Get{{$StructName}}{{.FieldName}} get one record by {{.FieldName}}
-func Get{{$StructName}}{{.FieldName}}({{.HumpName}} interface{},dbs ...*gorm.DB)(res *{{$StructName}},err error){
-			res=new({{$StructName}})
+func Get{{$StructName}}{{.FieldName}}({{.HumpName}} interface{},res interface{},dbs ...*gorm.DB)(err error){
 			if err = {{- if $Sep}}model_common.{{- end}}GetDB(dbs...).Model(&{{$StructName}}{}).First(res,"{{.DBName}} = ?",{{.HumpName}}).Error;err!=nil{
 				{{- if $TFErr}}{{- if $Sep}}model_common.{{- end}}ModelLog.Errorln(err)
 				err = ErrGet{{$StructName}} {{end}}

@@ -50,6 +50,7 @@ type InitDB struct {
 // The Generator is the one responsible for generating the code, adding the imports, formating, and writing it to the file.
 type Generator struct {
 	modelBuf   map[string]*bytes.Buffer
+	formBuf    map[string]*bytes.Buffer
 	serviceBuf map[string]*bytes.Buffer
 	settingBuf map[string]*bytes.Buffer
 	controlBuf map[string]*bytes.Buffer
@@ -96,6 +97,7 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 	}
 	g := &Generator{
 		modelBuf:   map[string]*bytes.Buffer{},
+		formBuf:    map[string]*bytes.Buffer{},
 		serviceBuf: map[string]*bytes.Buffer{},
 		settingBuf: map[string]*bytes.Buffer{},
 		controlBuf: map[string]*bytes.Buffer{},
@@ -160,11 +162,11 @@ func (g *Generator) genModel() (err error) {
 		if _, ok := g.modelBuf[v.StructName]; !ok {
 			continue
 		}
-		g.modelBuf[v.StructName+"_form"] = new(bytes.Buffer)
-		if t, err = template.New(v.StructName + "_form").Parse(model.TemplateGORMForm.String()); err != nil {
+		g.formBuf[v.StructName] = new(bytes.Buffer)
+		if t, err = template.New(v.StructName).Parse(model.TemplateGORMForm.String()); err != nil {
 			return
 		}
-		if err = t.Execute(g.modelBuf[v.StructName+"_form"], v); err != nil {
+		if err = t.Execute(g.formBuf[v.StructName], v); err != nil {
 			return
 		}
 		switch g.config.ORM {
@@ -417,6 +419,17 @@ func (g *Generator) formatModel() {
 	}
 }
 
+func (g *Generator) formatForm() {
+	for k, _ := range g.formBuf {
+		formatedOutput, err := format.Source(g.formBuf[k].Bytes())
+		if err != nil {
+			continue
+			log.Fatalln(err)
+		}
+		g.formBuf[k] = bytes.NewBuffer(formatedOutput)
+	}
+}
+
 // formatSetting
 func (g *Generator) formatSetting() {
 	formatedOutput, err := format.Source(g.settingBuf[settingName].Bytes())
@@ -479,6 +492,7 @@ func (g *Generator) Format() *Generator {
 	go func() {
 		defer wg.Done()
 		g.formatModel()
+		g.formatForm()
 	}()
 	go func() {
 		defer wg.Done()
@@ -503,17 +517,13 @@ func (g *Generator) flushModel() (err error) {
 		)
 		if g.config.Separate {
 			dir := g.outputDir + "/app/models/"
-			if strings.HasSuffix(s, "_form") {
-				dir += utils.SQLColumn2PkgStyle(strings.TrimSuffix(s, "_form"))
-			} else {
-				dir += utils.SQLColumn2PkgStyle(s)
-			}
+			dir += utils.SQLColumn2PkgStyle(s)
 			if err = os.MkdirAll(dir, 0777); err != nil {
 				if !os.IsExist(err) {
 					return
 				}
 			}
-			filename = dir + "/model_" + s + ".go"
+			filename = dir + "/" + s + ".go"
 		} else {
 			if err = os.MkdirAll(g.outputDir+"/app/models/", 0777); err != nil {
 				if !os.IsExist(err) {
@@ -527,6 +537,41 @@ func (g *Generator) flushModel() (err error) {
 			continue
 		}
 		if err = ioutil.WriteFile(filename, g.modelBuf[k].Bytes(), 0777); err != nil {
+			return
+		}
+	}
+	return
+}
+
+// flushModel
+func (g *Generator) flushForm() (err error) {
+	for k, _ := range g.formBuf {
+		var (
+			filename string
+			s        = gorm.ToDBName(k)
+		)
+		if g.config.Separate {
+			dir := g.outputDir + "/app/form/"
+			dir += utils.SQLColumn2PkgStyle(s)
+			if err = os.MkdirAll(dir, 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			filename = dir + "/" + s + ".go"
+		} else {
+			if err = os.MkdirAll(g.outputDir+"/app/form/", 0777); err != nil {
+				if !os.IsExist(err) {
+					return
+				}
+			}
+			filename = g.outputDir + "/app/form/" + s + ".go"
+		}
+
+		if utils.Exists(filename) {
+			continue
+		}
+		if err = ioutil.WriteFile(filename, g.formBuf[k].Bytes(), 0777); err != nil {
 			return
 		}
 	}
@@ -547,7 +592,7 @@ func (g *Generator) flushService() (err error) {
 					return
 				}
 			}
-			filename = dir + "/svc_" + s + ".go"
+			filename = dir + "/" + s + ".go"
 		} else {
 			dir := g.outputDir + "/app/services/"
 			if err = os.MkdirAll(dir, 0777); err != nil {
@@ -645,7 +690,7 @@ func (g *Generator) flushController() (err error) {
 				dir = g.outputDir + "/app/controller/" + s + "/"
 			} else {
 				dir = g.outputDir + "/app/controller/apis/" + s
-				prefix = "/api_"
+				prefix = "/"
 			}
 			if g.config.Separate {
 				if err = os.MkdirAll(dir, 0777); err != nil {
@@ -731,6 +776,9 @@ func (g *Generator) Flush() *Generator {
 	go func() {
 		defer wg.Done()
 		if err = g.flushModel(); err != nil {
+			log.Fatalln(err)
+		}
+		if err = g.flushForm(); err != nil {
 			log.Fatalln(err)
 		}
 	}()

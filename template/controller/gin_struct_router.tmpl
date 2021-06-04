@@ -18,7 +18,7 @@ func init{{.StructName}}(r *gin.RouterGroup) {
 	c := {{- if $Sep}}&api_{{.Package}}.{{- else}}&apis.{{- end}}Ctl{{.StructName}}{}
 	{{.HumpName}} := r.Group("{{.PluralName}}")
 	{{.HumpName}}.GET(":{{$PrimaryHumpName}}", c.Get)
-	{{.HumpName}}.GET("", c.GetList)
+	{{.HumpName}}.GET("", c.GetBatch)
 	{{.HumpName}}.POST("", c.Create)
 	{{.HumpName}}.POST("batch", c.AddBatch)
 	{{.HumpName}}.PUT(":{{$PrimaryHumpName}}", c.Update)

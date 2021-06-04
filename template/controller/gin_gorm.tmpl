@@ -7,8 +7,8 @@ import(
 	"fmt"
 	"github.com/gin-gonic/gin"
 {{if $Sep}}"{{.Mod}}/app/services/{{.PackageName}}"{{- else}}"{{.Mod}}/app/services"{{end}}
-{{if $Sep}}"{{.Mod}}/app/models/{{.PackageName}}"{{- else}}"{{.Mod}}/app/models"{{end}}
 	"{{.Mod}}/app/controller/response"
+	"{{.Mod}}/app/form"
 )
 {{$Primary:= ""}}
 {{$PrimaryType := ""}}
@@ -28,13 +28,13 @@ type Ctl{{$StructName}} struct {}
 // @Description create {{$StructName}} one record
 // @Accept json
 // @Produce json
-// @Param {} body {{ if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}Form true "添加{{$StructName}}表单"
+// @Param {} body form.Create{{$StructName}}Form true "添加{{$StructName}}表单"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}} [post]
 func (ct *Ctl{{$StructName}}) Create(c *gin.Context) {
 	var(
-		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Create{{$StructName}}Form)
+		req = new(form.Create{{$StructName}}Form)
 		data interface{}
 		code = response.CodeFail
 		err error
@@ -59,11 +59,11 @@ func (ct *Ctl{{$StructName}}) Create(c *gin.Context) {
 
 // AddBatch create {{$StructName}} batch record
 // @tags {{$StructName}}
-// @Summary create {{$StructName}} list record
-// @Description create {{$StructName}} list record
+// @Summary create {{$StructName}} batch record
+// @Description create {{$StructName}} batch record
 // @Accept json
 // @Produce json
-// @Param  {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Create{{$StructName}}BatchForm true "添加{{$StructName}}表单列表"
+// @Param  {} body form.Create{{$StructName}}BatchForm true "添加{{$StructName}}表单列表"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/batch [post]
@@ -71,7 +71,7 @@ func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
 	var(
 	data interface{}
 	code = response.CodeFail
-	req {{ if $Sep}}model_{{$Package}}{{else}}models{{- end}}.Create{{$StructName}}BatchForm
+	req = new(form.Create{{$StructName}}BatchForm)
 	err error)
 	defer func(){
 		if err!=nil{
@@ -81,7 +81,7 @@ func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
 		}
 	}()
 
-	if err = c.ShouldBind(&req);err!=nil{
+	if err = c.ShouldBind(req);err!=nil{
 		return
 	}
 
@@ -97,13 +97,13 @@ func (ct *Ctl{{$StructName}}) AddBatch(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param {{$PrimaryHumpName}} path string true "{{$PrimaryHumpName}}"
-// @Param {} body {{if $Sep}}model_{{$Package}}{{else}}models{{end}}.Up{{$StructName}}Form true "update {{$StructName}} form"
+// @Param {} body form.Up{{$StructName}}Form true "update {{$StructName}} form"
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}/:{{$PrimaryHumpName}} [put]
 func (ct *Ctl{{$StructName}}) Update(c *gin.Context) {
 	var(
-		req = new({{- if $Sep}}model_{{$Package}}{{- else}}models{{- end}}.Up{{$StructName}}Form)
+		req = new(form.Up{{$StructName}}Form)
 		key string
 		err error
 		code = response.CodeFail
@@ -168,10 +168,10 @@ func (ct *Ctl{{$StructName}}) Get(c *gin.Context) {
 {{$Float64 :="float64" }}
 {{$Float32 :="float32" }}
 {{$Time :="time.Time" }}
-// GetList get {{$StructName}} list record
+// GetBatch get {{$StructName}} batch record
 // @tags {{$StructName}}
-// @Summary get {{$StructName}} list record
-// @Description get {{$StructName}} list record
+// @Summary get {{$StructName}} batch record
+// @Description get {{$StructName}} batch record
 // @Accept json
 // @Produce json
 {{- range .Fields}}{{- if not .IsUnique}}
@@ -202,10 +202,10 @@ func (ct *Ctl{{$StructName}}) Get(c *gin.Context) {
 // @Success 200  {object} response.Response
 // @Failure 500  {object} response.Response
 // @router /api/v1/{{$Router}}  [get]
-func (ct *Ctl{{$StructName}}) GetList(c *gin.Context) {
+func (ct *Ctl{{$StructName}}) GetBatch(c *gin.Context) {
 	var(
 		data interface{}
-		req = new({{ if $Sep}}model_{{$Package}}.{{- else}}models.{{- end}}Query{{$StructName}}Form )
+		req = new(form.Query{{$StructName}}Form )
 		err error
 		code = response.CodeFail
 )

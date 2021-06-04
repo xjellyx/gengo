@@ -1,6 +1,6 @@
 
 {{$Sep := .Separate}}
-{{- if $Sep}}package model_{{.Package}}{{- else}}package models{{- end}}
+{{- if $Sep}}package model_{{.Package}}{{- else}}package form{{- end}}
 {{$StructName := .StructName}}
 {{$Int :=  "int" }}
 {{$Int8  :="int8" }}
@@ -72,3 +72,11 @@ type Up{{$StructName}}Form struct {
 func (a *Up{{$StructName}}Form) Valid() (err error) {
 	return
 }
+
+
+type {{$StructName}}Res struct{
+{{- range .Fields}}{{- if not .IsUnique}}
+		{{.FieldName}} {{.Type}} `json:"{{.HumpName}},omitempty"`
+{{- end}}
+{{- end}}
+		}
