@@ -66,9 +66,7 @@ GLOBAL OPTIONS:
 -  add web frame
    - echo
    - iris
-   
-## Example
-- [demo](https://github.com/olongfen/demo)
+  
 
 ## License
 - MIT License
