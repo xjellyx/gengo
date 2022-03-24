@@ -1,0 +1,12 @@
+{{$StructName :=.StructName}}
+
+{{- range .Fields}}
+func(obj *{{$StructName}})Set{{.FieldName}}(param {{.Type}}) *{{$StructName}} {
+    obj.{{.FieldName}} = param
+    return self
+}
+
+func(obj *{{$StructName}})Get{{.FieldName}}() {{.Type}} {
+    return obj.{{.FieldName}}
+}
+{{end}}

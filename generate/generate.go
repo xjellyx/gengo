@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/olongfen/gengo/template/controller"
+	"github.com/olongfen/gengo/template/entity"
 	gin_main "github.com/olongfen/gengo/template/main"
 	"github.com/olongfen/gengo/template/service"
 	"github.com/olongfen/gengo/template/setting"
@@ -33,6 +34,7 @@ const (
 	response    = "response"
 	initRouter  = "initRouter"
 	middleware  = "middleware"
+	entities    = "entities"
 )
 
 type Struct struct {
@@ -55,6 +57,7 @@ type Generator struct {
 	settingBuf map[string]*bytes.Buffer
 	controlBuf map[string]*bytes.Buffer
 	routerBuf  map[string]*bytes.Buffer
+	entity     map[string]*bytes.Buffer
 	mainBuf    *bytes.Buffer
 	outputDir  string
 	config     parse.Config
@@ -83,6 +86,7 @@ func (g *Generator) init() {
 	g.controlBuf[middleware] = &bytes.Buffer{}
 	g.controlBuf[response] = &bytes.Buffer{}
 	g.routerBuf[initRouter] = &bytes.Buffer{}
+	g.entity[entities] = &bytes.Buffer{}
 }
 
 // NewGenerator function creates an instance of the generator given the name of the output file as an argument.
@@ -106,6 +110,7 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 		outputDir:  output,
 		parser:     p,
 		initDB:     new(InitDB),
+		entity:     map[string]*bytes.Buffer{},
 	}
 	g.config = c
 	g.init()
@@ -120,12 +125,51 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 		v.Config = c
 		v.Config.Package = v.LowerName
 		g.modelBuf[v.StructName] = new(bytes.Buffer)
+		g.entity[v.StructName] = new(bytes.Buffer)
 		g.serviceBuf[v.StructName] = new(bytes.Buffer)
 		g.controlBuf[v.StructName] = new(bytes.Buffer)
 		g.routerBuf[v.StructName] = new(bytes.Buffer)
 	}
 
 	return g, nil
+}
+
+// genModel
+func (g *Generator) GenEntity() {
+	var (
+		err  error
+		temp *template.Template
+	)
+	if temp, err = template.New("entity").Parse(entity.Template.String()); err != nil {
+		log.Fatalln(err)
+	}
+	dir := g.outputDir
+	if len(dir) > 0 {
+		if err = os.MkdirAll(dir, 0777); err != nil {
+			if !os.IsExist(err) {
+				log.Fatalln(err)
+			}
+		}
+	}
+	for _, v := range g.parser.Structs {
+		if _, ok := g.entity[v.StructName]; !ok {
+			continue
+		}
+
+		if err = temp.Execute(g.entity[v.StructName], v); err != nil {
+			log.Fatalln(err)
+		}
+
+		filename := v.StructName + ".tmp"
+		if len(dir) > 0 {
+			filename = dir + "/" + filename
+		}
+		if err = ioutil.WriteFile(filename, g.entity[v.StructName].Bytes(), 0777); err != nil {
+			log.Fatalln(err)
+		}
+
+	}
+	return
 }
 
 // genModel

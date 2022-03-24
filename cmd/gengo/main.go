@@ -17,7 +17,7 @@ const (
 	ormFlag            = "orm"
 	separateFlag       = "separate"
 	genPkgFlag         = "genPkg"
-	removeSourceFlag   = "removeSource"
+	genTypeFlag        = "genTypeFlag"
 )
 
 var (
@@ -39,13 +39,13 @@ var (
 			Name:     modFlag,
 			Aliases:  []string{"m"},
 			Usage:    "The name of project go module",
-			Required: true,
+			Required: false,
 		},
 		&cli.StringFlag{
 			Name:     genPkgFlag,
 			Aliases:  []string{"g"},
 			Usage:    "The name of define model struct package name",
-			Required: true,
+			Required: false,
 		},
 		&cli.StringFlag{
 			Name:     webFlag,
@@ -74,13 +74,13 @@ var (
 			Required: false,
 			Value:    false,
 		},
-		//&cli.BoolFlag{
-		//	Name:     removeSourceFlag,
-		//	Aliases:  []string{"rm"},
-		//	Usage:    "The name of remove source",
-		//	Required: false,
-		//	Value:    false,
-		//},
+		&cli.IntFlag{
+			Name:     genTypeFlag,
+			Aliases:  []string{"type"},
+			Usage:    "The name of remove source",
+			Required: false,
+			Value:    1,
+		},
 	}
 )
 
@@ -108,7 +108,14 @@ func initAction(c *cli.Context) error {
 	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(c.String(inputDirFlag)), cfg); err != nil {
 		return err
 	}
-	gen.Generate().Format().Flush().GenDocs()
+	switch c.Int(genTypeFlag) {
+	case 1:
+		gen.Generate().GenEntity()
+	default:
+		gen.Generate().Format().Flush().GenDocs()
+
+	}
+
 	return nil
 }
 
