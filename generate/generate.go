@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -134,22 +135,15 @@ func NewGenerator(output string, p *parse.Parser, c parse.Config) (ret *Generato
 	return g, nil
 }
 
-// genModel
+// GenEntity gen
 func (g *Generator) GenEntity() {
 	var (
 		err  error
+		file *os.File
 		temp *template.Template
 	)
 	if temp, err = template.New("entity").Parse(entity.Template.String()); err != nil {
 		log.Fatalln(err)
-	}
-	dir := g.outputDir
-	if len(dir) > 0 {
-		if err = os.MkdirAll(dir, 0777); err != nil {
-			if !os.IsExist(err) {
-				log.Fatalln(err)
-			}
-		}
 	}
 	for _, v := range g.parser.Structs {
 		if _, ok := g.entity[v.StructName]; !ok {
@@ -160,11 +154,22 @@ func (g *Generator) GenEntity() {
 			log.Fatalln(err)
 		}
 
-		filename := v.StructName + ".tmp"
-		if len(dir) > 0 {
-			filename = dir + "/" + filename
+		if file, err = os.OpenFile(g.config.Input, os.O_WRONLY|os.O_APPEND, os.ModeAppend); err != nil {
+			log.Fatalln(err)
 		}
-		if err = ioutil.WriteFile(filename, g.entity[v.StructName].Bytes(), 0777); err != nil {
+		writer := bufio.NewWriter(file)
+		pak := []byte("package tmpl")
+		all := append(pak, g.entity[v.StructName].Bytes()...)
+
+		data := g.parser.CheckExistFunc(g.config.Input, all)
+		if len(data) == len(all) {
+			data = data[len(pak):]
+		}
+		// 已经生成或者存在Set Get方法不会再添加生成
+		if _, err = writer.Write(data); err != nil {
+			log.Fatalln(err)
+		}
+		if err = writer.Flush(); err != nil {
 			log.Fatalln(err)
 		}
 

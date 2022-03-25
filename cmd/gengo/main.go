@@ -95,6 +95,7 @@ func initAction(c *cli.Context) error {
 			ORM:      c.String(ormFlag),
 			Separate: c.Bool(separateFlag),
 			GenPkg:   c.String(genPkgFlag),
+			Input:    c.String(inputDirFlag),
 			// RemoveSource: c.Bool(removeSourceFlag),
 		}
 	)
@@ -105,7 +106,7 @@ func initAction(c *cli.Context) error {
 	//	output = d[:index]
 	//}
 
-	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(c.String(inputDirFlag)), cfg); err != nil {
+	if gen, err = generate.NewGenerator(c.String(outputDirFlag), parse.NewParser(cfg.Input), cfg); err != nil {
 		return err
 	}
 	switch c.Int(genTypeFlag) {

@@ -48,6 +48,7 @@ type Config struct {
 	Separate     bool
 	RemoveSource bool
 	GenPkg       string
+	Input        string
 }
 
 // Parser parse struct
@@ -74,6 +75,7 @@ func (p *Parser) ParserFile() (err error) {
 	var (
 		f *ast.File
 	)
+
 	// 解析文件数据
 	if f, err = parser.ParseFile(p.fs, p.Filepath, nil, 0); err != nil {
 		return
@@ -82,6 +84,47 @@ func (p *Parser) ParserFile() (err error) {
 	p.Files[p.Filepath] = f
 
 	return
+}
+
+func (p *Parser) CheckExistFunc(input string, b []byte) []byte {
+	var (
+		inputArr  []string
+		outputMap = make(map[string][2]int)
+	)
+	ast.Inspect(p.Files[input], func(n ast.Node) bool {
+		if funcDecl, ok := n.(*ast.FuncDecl); ok {
+			inputArr = append(inputArr, funcDecl.Name.Name)
+		}
+		return true
+	})
+	if len(inputArr) == 0 {
+		return b
+	}
+	f, err := parser.ParseFile(token.NewFileSet(), "", b, 0)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ast.Inspect(f, func(n ast.Node) bool {
+		if funcDecl, ok := n.(*ast.FuncDecl); ok {
+			outputMap[funcDecl.Name.Name] = [2]int{int(funcDecl.Pos()) - 1, int(funcDecl.End())}
+		}
+		return true
+	})
+	var res = make([]byte, 0)
+	var isContain = func(items []string, item string) bool {
+		for _, v := range items {
+			if v == item {
+				return true
+			}
+		}
+		return false
+	}
+	for k, val := range outputMap {
+		if !isContain(inputArr, k) {
+			res = append(res, b[val[0]:val[1]]...)
+		}
+	}
+	return res
 }
 
 // ParserStruct 解析结构体数据

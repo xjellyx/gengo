@@ -3,7 +3,7 @@
 {{- range .Fields}}
 func(obj *{{$StructName}})Set{{.FieldName}}(param {{.Type}}) *{{$StructName}} {
     obj.{{.FieldName}} = param
-    return self
+    return obj
 }
 
 func(obj *{{$StructName}})Get{{.FieldName}}() {{.Type}} {
