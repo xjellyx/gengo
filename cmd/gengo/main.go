@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/olongfen/gengo/generate"
 	"github.com/olongfen/gengo/parse"
 	"github.com/urfave/cli/v2"
@@ -77,7 +78,7 @@ var (
 		&cli.IntFlag{
 			Name:     genTypeFlag,
 			Aliases:  []string{"type"},
-			Usage:    "The name of remove source",
+			Usage:    fmt.Sprintf("The name of remove source:  %s", "1:gen entity methos;default:gen curd code"),
 			Required: false,
 			Value:    1,
 		},
