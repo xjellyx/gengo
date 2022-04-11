@@ -163,12 +163,17 @@ func (g *Generator) GenEntity() {
 
 		data := g.parser.CheckExistFunc(g.config.Input, all)
 		if len(data) == len(all) {
-			data = data[len(pak):]
+			data = all[len(pak):]
 		}
-		// 已经生成或者存在Set Get方法不会再添加生成
-		if _, err = writer.Write(data); err != nil {
+		formatedOutput, err := format.Source(data)
+		if err != nil {
 			log.Fatalln(err)
 		}
+		// 已经生成或者存在Set Get方法不会再添加生成
+		if _, err = writer.Write(formatedOutput); err != nil {
+			log.Fatalln(err)
+		}
+
 		if err = writer.Flush(); err != nil {
 			log.Fatalln(err)
 		}

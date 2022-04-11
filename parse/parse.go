@@ -121,6 +121,7 @@ func (p *Parser) CheckExistFunc(input string, b []byte) []byte {
 	}
 	for k, val := range outputMap {
 		if !isContain(inputArr, k) {
+			res = append(res, byte('\n'))
 			res = append(res, b[val[0]:val[1]]...)
 		}
 	}
@@ -246,7 +247,8 @@ func (p *Parser) ParserStruct() (err error) {
 				}
 				if !haveModel {
 					err = fmt.Errorf("%s %s", "please set the primary key of the table ", data.StructName)
-					log.Fatal(err)
+					log.Warnln(err)
+					err = nil
 				}
 				p.Structs = append(p.Structs, data)
 			}
